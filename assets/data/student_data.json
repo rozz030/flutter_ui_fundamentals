@@ -1,0 +1,45 @@
+{
+  "student": {
+    "nim": "2415051106",
+    "name": "Komang Rossi Adi Utama",
+    "semester": "5"
+  },
+  "courses": [
+    {
+      "code": "MOB01",
+      "title": "Literasi Keuangan",
+      "credits": 3,
+      "status": "active"
+    },
+    {
+      "code": "MOB02",
+      "title": "Pemrograman Mobile",
+      "credits": 3,
+      "status": "active"
+    },
+    {
+      "code": "MOB03",
+      "title": "Pembelajaran Mikro",
+      "credits": 2,
+      "status": "active"
+    },
+    {
+      "code": "MOB04",
+      "title": "Metodologi Penelitian Pendidikan Teknik Informatika",
+      "credits": 3,
+      "status": "active"
+    },
+    {
+      "code": "MOB05",
+      "title": "Literasi Kebugaran",
+      "credits": 3,
+      "status": "active"
+    },
+    {
+      "code": "MOB06",
+      "title": "Literasi Lingkungan",
+      "credits": 3,
+      "status": "active"
+    }
+  ]
+}
