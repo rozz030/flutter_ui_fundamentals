@@ -1,202 +1,7 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
 
 const String studentName = 'Komang Rossi Adi Utama';
 const String studentId = '2415051106';
-
-Future<Map<String, dynamic>> loadStudentData() async {
-  final jsonString = await rootBundle.loadString(
-    'assets/data/student_data.json',
-  );
-
-  return jsonDecode(jsonString) as Map<String, dynamic>;
-}
-
-Widget buildSummaryCard(String value, String label, IconData icon) {
-  return Expanded(
-    child: Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Icon(icon, size: 32),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            Text(label),
-          ],
-        ),
-      ),
-    ),
-  );
-}
-
-Widget buildCourseCard(Map<String, dynamic> course) {
-  final String status = course['status'] as String;
-
-  final bool isDone = status == 'done';
-  final bool isActive = status == 'active';
-
-  final IconData statusIcon = isDone
-      ? Icons.check_circle
-      : isActive
-      ? Icons.play_circle
-      : Icons.schedule;
-
-  final String statusText = isDone
-      ? 'Selesai'
-      : isActive
-      ? 'Aktif'
-      : 'Direncanakan';
-
-  return Card(
-    margin: const EdgeInsets.only(bottom: 10),
-    child: ListTile(
-      leading: Icon(statusIcon),
-      title: Text(
-        course['title'] as String,
-        style: const TextStyle(fontWeight: FontWeight.bold),
-      ),
-      subtitle: Text('${course['code']} • ${course['credits']} SKS'),
-      trailing: Text(statusText),
-    ),
-  );
-}
-
-class DashboardPage extends StatefulWidget {
-  const DashboardPage({super.key});
-
-  @override
-  State<DashboardPage> createState() => _DashboardPageState();
-}
-
-class _DashboardPageState extends State<DashboardPage> {
-  late Future<Map<String, dynamic>> studentFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    studentFuture = loadStudentData();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Learning Dashboard')),
-      body: FutureBuilder<Map<String, dynamic>>(
-        future: studentFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError) {
-            return Center(child: Text('Gagal memuat data: ${snapshot.error}'));
-          }
-
-          final data = snapshot.data!;
-
-          final student = data['student'] as Map<String, dynamic>;
-
-          final courses = data['courses'] as List<dynamic>;
-
-          final int totalCourses = courses.length;
-
-          final int totalCredits = courses.fold(
-            0,
-            (sum, course) => sum + (course['credits'] as int),
-          );
-
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      const CircleAvatar(
-                        radius: 46,
-                        backgroundImage: AssetImage(
-                          'assets/images/profile.jpg',
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        student['name'] as String,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(student['nim'] as String),
-                      const SizedBox(height: 4),
-                      Text('Semester ${student['semester']}'),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              const Text(
-                'Ringkasan Pembelajaran',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-
-              const SizedBox(height: 8),
-
-              Row(
-                children: [
-                  buildSummaryCard(
-                    '$totalCourses',
-                    'Mata Kuliah',
-                    Icons.menu_book,
-                  ),
-                  buildSummaryCard('$totalCredits', 'Total SKS', Icons.school),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
-              // Case A: Mengatasi teks panjang dalam Row
-              const Row(
-                children: [
-                  Icon(Icons.info),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      '$studentId - $studentName - Ini adalah teks yang sangat panjang untuk menguji layout',
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
-              const Text(
-                'Daftar Mata Kuliah',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-
-              const SizedBox(height: 8),
-
-              ...courses.map(
-                (course) => buildCourseCard(course as Map<String, dynamic>),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-}
 
 void main() {
   runApp(const MyApp());
@@ -209,7 +14,371 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const DashboardPage(),
+      title: 'Tahap 16 - Debugging Challenge',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        useMaterial3: true,
+      ),
+      home: const DebuggingPage(),
+    );
+  }
+}
+
+class DebuggingPage extends StatefulWidget {
+  const DebuggingPage({super.key});
+
+  @override
+  State<DebuggingPage> createState() => _DebuggingPageState();
+}
+
+class _DebuggingPageState extends State<DebuggingPage> {
+  final TextEditingController commentController = TextEditingController();
+
+  bool isLoading = false;
+  bool isFavorite = false;
+
+  @override
+  void dispose() {
+    commentController.dispose();
+    super.dispose();
+  }
+
+  // ==========================================================
+  // KASUS D - MENCEGAH NAVIGASI GANDA
+  // ==========================================================
+
+  Future<void> openDetail() async {
+    if (isLoading) return;
+
+    setState(() {
+      isLoading = true;
+    });
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const DetailPage()),
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Tahap 16 - Debugging'),
+        centerTitle: true,
+      ),
+
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+
+          children: [
+            // ==================================================
+            // IDENTITAS
+            // ==================================================
+
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+
+                child: Row(
+                  children: [
+                    const CircleAvatar(radius: 28, child: Icon(Icons.person)),
+
+                    const SizedBox(width: 15),
+
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            studentName,
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+
+                          const SizedBox(height: 5),
+
+                          const Text('NIM: $studentId'),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            const Text(
+              'Debugging Challenge',
+              style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+            ),
+
+            const SizedBox(height: 20),
+
+            // ==================================================
+            // KASUS A
+            // RenderFlex Overflow
+            // ==================================================
+            const Text(
+              'Kasus A - RenderFlex Overflow',
+              style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
+            ),
+
+            const SizedBox(height: 10),
+
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+
+                child: Row(
+                  children: [
+                    const Icon(Icons.info),
+
+                    const SizedBox(width: 10),
+
+                    Expanded(
+                      child: Text(
+                        '$studentId - '
+                        '$studentName - '
+                        'Teks panjang yang '
+                        'sudah diperbaiki '
+                        'menggunakan Expanded '
+                        'agar tidak menyebabkan '
+                        'RenderFlex overflow.',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 25),
+
+            // ==================================================
+            // KASUS B
+            // ListView + Expanded
+            // ==================================================
+            const Text(
+              'Kasus B - Unbounded Height',
+              style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
+            ),
+
+            const SizedBox(height: 10),
+
+            Container(
+              height: 220,
+              padding: const EdgeInsets.all(10),
+
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey),
+                borderRadius: BorderRadius.circular(12),
+              ),
+
+              child: Column(
+                children: [
+                  const Text(
+                    'ListView berada di '
+                    'dalam ruang dengan '
+                    'tinggi yang jelas.',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: 5,
+
+                      itemBuilder: (context, index) {
+                        return ListTile(
+                          dense: true,
+
+                          leading: CircleAvatar(child: Text('${index + 1}')),
+
+                          title: Text('Course ${index + 1}'),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 25),
+
+            // ==================================================
+            // KASUS C
+            // KEYBOARD OVERFLOW
+            // ==================================================
+            const Text(
+              'Kasus C - Keyboard Overflow',
+              style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
+            ),
+
+            const SizedBox(height: 10),
+
+            TextField(
+              controller: commentController,
+
+              maxLines: 4,
+
+              decoration: const InputDecoration(
+                labelText: 'Komentar',
+
+                hintText: 'Ketik komentar di sini...',
+
+                border: OutlineInputBorder(),
+
+                prefixIcon: Icon(Icons.comment),
+              ),
+            ),
+
+            const SizedBox(height: 25),
+
+            // ==================================================
+            // KASUS D
+            // NAVIGASI GANDA
+            // ==================================================
+            const Text(
+              'Kasus D - Navigasi Ganda',
+              style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
+            ),
+
+            const SizedBox(height: 10),
+
+            const Text(
+              'Tombol dinonaktifkan selama '
+              'proses navigasi berlangsung '
+              'untuk mencegah route '
+              'ter-push berulang kali.',
+            ),
+
+            const SizedBox(height: 15),
+
+            SizedBox(
+              width: double.infinity,
+
+              height: 50,
+
+              child: ElevatedButton.icon(
+                onPressed: isLoading ? null : openDetail,
+
+                icon: const Icon(Icons.open_in_new),
+
+                label: Text(isLoading ? 'Membuka...' : 'Buka Detail'),
+              ),
+            ),
+
+            const SizedBox(height: 25),
+
+            // ==================================================
+            // FAVORITE
+            // ==================================================
+            Card(
+              child: ListTile(
+                leading: Icon(
+                  isFavorite ? Icons.favorite : Icons.favorite_border,
+                ),
+
+                title: const Text('Course Favorite'),
+
+                subtitle: const Text(
+                  'Contoh perubahan state '
+                  'sederhana.',
+                ),
+
+                trailing: IconButton(
+                  onPressed: () {
+                    setState(() {
+                      isFavorite = !isFavorite;
+                    });
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          isFavorite
+                              ? 'Course ditambahkan ke favorite'
+                              : 'Course dihapus dari favorite',
+                        ),
+                      ),
+                    );
+                  },
+
+                  icon: Icon(
+                    isFavorite ? Icons.favorite : Icons.favorite_border,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================
+// DETAIL PAGE
+// ============================================================
+
+class DetailPage extends StatelessWidget {
+  const DetailPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Detail Page')),
+
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+
+            children: [
+              const Icon(Icons.check_circle, size: 70),
+
+              const SizedBox(height: 20),
+
+              const Text(
+                'Halaman Detail',
+                style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+              ),
+
+              const SizedBox(height: 10),
+
+              const Text(
+                'Nama: $studentName\n'
+                'NIM: $studentId',
+                textAlign: TextAlign.center,
+              ),
+
+              const SizedBox(height: 25),
+
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+
+                child: const Text('Kembali'),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
