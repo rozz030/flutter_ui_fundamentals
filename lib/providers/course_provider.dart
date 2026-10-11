@@ -1,6 +1,6 @@
 // =============================================================
-// Pertemuan 6 - Tahap 11
-// Provider untuk Async State (loading / success / error)
+// Pertemuan 6 - Tahap 15
+// Debugging State Management
 // Nama : Komang Rossi Adi Utama
 // NIM  : 2415051106
 // =============================================================
@@ -15,15 +15,41 @@ class CourseProvider extends ChangeNotifier {
 
   CourseProvider(this.repository);
 
-  // State yang dikelola:
+  // State utama
   List<Course> courses = [];
   bool isLoading = false;
   String? error;
 
+  // ===========================================================
+  // KASUS A: mode "silent" untuk demo lupa notifyListeners().
+  // Kalau silentMode = true, notifyListeners() TIDAK dipanggil.
+  // UI tidak akan update walau state berubah.
+  // ===========================================================
+  bool silentMode = false;
+
+  void _safeNotify() {
+    if (silentMode) {
+      // BUG DEMO: sengaja tidak memanggil notifyListeners().
+      debugPrint('[KASUS A] State berubah, tapi notifyListeners() dilewati.');
+      return;
+    }
+    notifyListeners();
+  }
+
+  void toggleSilentMode() {
+    silentMode = !silentMode;
+    // Panggil notifyListeners langsung (bukan _safeNotify)
+    // supaya tombolnya tetap update.
+    notifyListeners();
+  }
+
+  // ===========================================================
+  // Fungsi utama: load courses.
+  // ===========================================================
   Future<void> loadCourses() async {
     isLoading = true;
     error = null;
-    notifyListeners();
+    _safeNotify();
 
     try {
       courses = await repository.getCourses();
@@ -32,7 +58,24 @@ class CourseProvider extends ChangeNotifier {
       courses = [];
     } finally {
       isLoading = false;
-      notifyListeners();
+      _safeNotify();
     }
+  }
+
+  // ===========================================================
+  // KASUS C: simulasi error pada service.
+  // ===========================================================
+  Future<void> simulateError() async {
+    isLoading = true;
+    error = null;
+    notifyListeners();
+
+    // Simulasi delay + error.
+    await Future.delayed(const Duration(milliseconds: 800));
+
+    error = 'Simulasi error: koneksi ke server gagal.';
+    courses = [];
+    isLoading = false;
+    notifyListeners();
   }
 }
