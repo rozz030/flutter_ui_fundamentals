@@ -1,6 +1,6 @@
 // =============================================================
-// Pertemuan 6 - Tahap 12
-// Widget WatchDemoCard (Tahap 7)
+// Pertemuan 6 - Tahap 13
+// Widget WatchDemoCard (Tahap 7 + 13)
 // =============================================================
 
 import 'package:flutter/material.dart';
@@ -23,7 +23,7 @@ class WatchDemoCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'context.watch - Tahap 7',
+              'context.watch - Tahap 7 & 13',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
@@ -33,8 +33,7 @@ class WatchDemoCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Status: '
-              '${notifier.isFavorite ? "FAVORIT" : "BUKAN FAVORIT"}',
+              'Jumlah favorit: ${notifier.count}',
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
             Text('Jumlah toggle: ${notifier.toggleCount} kali'),

@@ -1,12 +1,14 @@
 // =============================================================
-// Pertemuan 6 - Tahap 12
-// Screen: CourseDetailPage
+// Pertemuan 6 - Tahap 13
+// Screen: CourseDetailPage + tombol Favorite
 // =============================================================
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../constants.dart';
 import '../models/course.dart';
+import '../providers/favorite_notifier.dart';
 
 class CourseDetailPage extends StatelessWidget {
   final Course course;
@@ -17,49 +19,99 @@ class CourseDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Detail Mata Kuliah')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Center(child: Icon(Icons.menu_book, size: 64)),
-                  const SizedBox(height: 20),
-                  Text(
-                    course.title,
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
+      body: Consumer<FavoriteNotifier>(
+        builder: (context, favNotifier, _) {
+          final bool isFav = favNotifier.isFavorite(course.code);
+
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Center(child: Icon(Icons.menu_book, size: 64)),
+                      const SizedBox(height: 20),
+                      Text(
+                        course.title,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Divider(height: 32),
+                      _detailRow('Kode Mata Kuliah', course.code),
+                      _detailRow('Jumlah SKS', '${course.credits} SKS'),
+                      _detailRow('Status', course.statusLabel),
+                      const Divider(height: 32),
+
+                      // ---------- TAHAP 13: Status favorite ----------
+                      const Text(
+                        'Status Favorit',
+                        style: TextStyle(fontSize: 13, color: Colors.grey),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(
+                            isFav ? Icons.favorite : Icons.favorite_border,
+                            color: isFav ? Colors.red : Colors.grey,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            isFav ? 'FAVORIT' : 'BUKAN FAVORIT',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: () {
+                            // Toggle dari halaman detail.
+                            favNotifier.toggle(course.code);
+                          },
+                          icon: Icon(
+                            isFav ? Icons.favorite_border : Icons.favorite,
+                          ),
+                          label: Text(
+                            isFav ? 'Hapus dari Favorit' : 'Tambah ke Favorit',
+                          ),
+                        ),
+                      ),
+
+                      const Divider(height: 32),
+                      const Text(
+                        'Identitas Mahasiswa',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _detailRow('Nama', studentName),
+                      _detailRow('NIM', studentId),
+                    ],
                   ),
-                  const Divider(height: 32),
-                  _detailRow('Kode Mata Kuliah', course.code),
-                  _detailRow('Jumlah SKS', '${course.credits} SKS'),
-                  _detailRow('Status', course.statusLabel),
-                  const Divider(height: 32),
-                  const Text(
-                    'Identitas Mahasiswa',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
-                  _detailRow('Nama', studentName),
-                  _detailRow('NIM', studentId),
-                ],
+                ),
               ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          FilledButton.icon(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Kembali ke Dashboard'),
-          ),
-        ],
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                icon: const Icon(Icons.arrow_back),
+                label: const Text('Kembali ke Dashboard'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

@@ -1,6 +1,6 @@
 // =============================================================
-// Pertemuan 6 - Tahap 12
-// Widget CourseAsyncSection (Tahap 11)
+// Pertemuan 6 - Tahap 13
+// Widget CourseAsyncSection
 // =============================================================
 
 import 'package:flutter/material.dart';
@@ -99,6 +99,7 @@ class CourseAsyncSection extends StatelessWidget {
 
             const SizedBox(height: 16),
 
+            // ---------- TAHAP 11/13: Status Provider ----------
             Card(
               color: Colors.amber.shade50,
               child: Padding(
@@ -147,15 +148,16 @@ class CourseAsyncSection extends StatelessWidget {
             ),
             const SizedBox(height: 8),
 
+            // ---------- TAHAP 13: Favorites lintas screen ----------
             Consumer<FavoriteNotifier>(
-              builder: (context, notifier, _) {
+              builder: (context, favNotifier, _) {
                 return Column(
                   children: courses.map((course) {
                     return buildCourseCard(
                       context,
                       course,
-                      isFavorite: notifier.isFavorite,
-                      onFavoriteChanged: notifier.toggle,
+                      isFavorite: favNotifier.isFavorite(course.code),
+                      onFavoriteChanged: () => favNotifier.toggle(course.code),
                     );
                   }).toList(),
                 );

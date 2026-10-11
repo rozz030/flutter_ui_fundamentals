@@ -1,6 +1,6 @@
 // =============================================================
-// Pertemuan 6 - Tahap 12
-// Screen: DashboardPage
+// Pertemuan 6 - Tahap 13
+// Screen: DashboardPage + AppBar Favorites
 // =============================================================
 
 import 'package:flutter/material.dart';
@@ -13,6 +13,7 @@ import '../services/student_service.dart';
 import '../widgets/course_async_section.dart';
 import '../widgets/read_demo_card.dart';
 import '../widgets/watch_demo_card.dart';
+import 'favorites_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -51,7 +52,38 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Learning Dashboard')),
+      appBar: AppBar(
+        title: const Text('Learning Dashboard'),
+        actions: [
+          // ---------- TAHAP 13: Tombol ke FavoritesPage ----------
+          Consumer<FavoriteNotifier>(
+            builder: (context, favNotifier, _) {
+              final count = favNotifier.count;
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: TextButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const FavoritesPage(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.favorite, color: Colors.red),
+                  label: Text(
+                    '$count',
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
       body: FutureBuilder<Map<String, dynamic>>(
         future: studentFuture,
         builder: (context, snapshot) {
@@ -105,7 +137,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
               const SizedBox(height: 16),
 
-              // ---------- Async Section (Tahap 11) ----------
+              // ---------- Async Section (Tahap 11 + 13) ----------
               const CourseAsyncSection(),
 
               const SizedBox(height: 16),
@@ -180,11 +212,10 @@ class _DashboardPageState extends State<DashboardPage> {
               const ReadDemoCard(),
               const SizedBox(height: 16),
 
-              // ---------- TAHAP 6 ----------
+              // ---------- TAHAP 6 & 13 ----------
               Consumer<FavoriteNotifier>(
                 builder: (context, notifier, _) {
-                  final bool fav = notifier.isFavorite;
-                  final int count = notifier.toggleCount;
+                  final int count = notifier.count;
 
                   return Card(
                     color: Colors.orange.shade50,
@@ -194,7 +225,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Consumer - Tahap 6 & 7',
+                            'Consumer - Tahap 6 & 13',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -206,49 +237,23 @@ class _DashboardPageState extends State<DashboardPage> {
                             style: TextStyle(color: Colors.grey),
                           ),
                           const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Icon(
-                                fav ? Icons.favorite : Icons.favorite_border,
-                                color: fav ? Colors.red : Colors.grey,
-                                size: 28,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Status: '
-                                '${fav ? "FAVORIT" : "BUKAN FAVORIT"}',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
                           Text(
-                            'Jumlah toggle: $count kali',
-                            style: const TextStyle(color: Colors.grey),
+                            'Jumlah favorit: $count',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                           const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: FilledButton.icon(
-                                  onPressed: () {
-                                    context.read<FavoriteNotifier>().toggle();
-                                  },
-                                  icon: const Icon(Icons.swap_horiz),
-                                  label: const Text('Toggle Favorit'),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              OutlinedButton(
-                                onPressed: () {
-                                  context.read<FavoriteNotifier>().reset();
-                                },
-                                child: const Text('Reset'),
-                              ),
-                            ],
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: () {
+                                context.read<FavoriteNotifier>().reset();
+                              },
+                              icon: const Icon(Icons.refresh),
+                              label: const Text('Reset Favorit'),
+                            ),
                           ),
                         ],
                       ),
@@ -280,7 +285,6 @@ class _DashboardPageState extends State<DashboardPage> {
                         style: TextStyle(color: Colors.grey),
                       ),
                       const SizedBox(height: 12),
-
                       ValueListenableBuilder<int>(
                         valueListenable: favoriteCount,
                         builder: (context, value, child) {
@@ -299,7 +303,6 @@ class _DashboardPageState extends State<DashboardPage> {
                           );
                         },
                       ),
-
                       const SizedBox(height: 8),
                       Row(
                         children: [
@@ -326,15 +329,12 @@ class _DashboardPageState extends State<DashboardPage> {
                           ),
                         ],
                       ),
-
                       const Divider(height: 32),
-
                       const Text(
                         'Contoh 2: Penghitung Klik',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
-
                       ValueListenableBuilder<int>(
                         valueListenable: clickCounter,
                         builder: (context, value, child) {
@@ -344,7 +344,6 @@ class _DashboardPageState extends State<DashboardPage> {
                           );
                         },
                       ),
-
                       const SizedBox(height: 8),
                       SizedBox(
                         width: double.infinity,

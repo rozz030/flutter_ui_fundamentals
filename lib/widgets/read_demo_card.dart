@@ -1,6 +1,6 @@
 // =============================================================
-// Pertemuan 6 - Tahap 12
-// Widget ReadDemoCard (Tahap 7)
+// Pertemuan 6 - Tahap 13
+// Widget ReadDemoCard (Tahap 7 + 13)
 // =============================================================
 
 import 'package:flutter/material.dart';
@@ -21,7 +21,7 @@ class ReadDemoCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'context.read - Tahap 7',
+              'context.read - Tahap 7 & 13',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
@@ -35,10 +35,12 @@ class ReadDemoCard extends StatelessWidget {
                 Expanded(
                   child: FilledButton.icon(
                     onPressed: () {
-                      context.read<FavoriteNotifier>().toggle();
+                      // Contoh aksi read: toggle salah satu course.
+                      // Kode di sini hardcode hanya untuk demo.
+                      context.read<FavoriteNotifier>().toggle('MOB01');
                     },
                     icon: const Icon(Icons.touch_app),
-                    label: const Text('Toggle via read'),
+                    label: const Text('Toggle MOB01'),
                   ),
                 ),
                 const SizedBox(width: 8),
