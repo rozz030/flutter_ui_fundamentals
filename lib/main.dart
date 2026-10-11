@@ -87,13 +87,22 @@ class _DashboardPageState extends State<DashboardPage> {
   late Future<Map<String, dynamic>> studentFuture;
 
   // Local State Tahap 1.
-  // false berarti informasi tambahan disembunyikan.
   bool showExtraInfo = false;
+
+  // Satu nilai Favorites yang dimiliki parent untuk Tahap 2.
+  bool isFavorite = false;
 
   @override
   void initState() {
     super.initState();
     studentFuture = loadStudentData();
+  }
+
+  // Callback dari child untuk mengubah nilai pada parent.
+  void toggleFavorite() {
+    setState(() {
+      isFavorite = !isFavorite;
+    });
   }
 
   @override
@@ -213,13 +222,9 @@ class _DashboardPageState extends State<DashboardPage> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-
                       const SizedBox(height: 8),
-
                       const Text('Nama: Komang Rossi Adi Utama'),
-
                       const Text('NIM: 2415051106'),
-
                       const SizedBox(height: 8),
 
                       if (showExtraInfo)
@@ -233,18 +238,13 @@ class _DashboardPageState extends State<DashboardPage> {
 
                       SizedBox(
                         width: double.infinity,
-                        child: FilledButton.icon(
+                        child: FilledButton(
                           onPressed: () {
                             setState(() {
                               showExtraInfo = !showExtraInfo;
                             });
                           },
-                          icon: Icon(
-                            showExtraInfo
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                          ),
-                          label: Text(
+                          child: Text(
                             showExtraInfo
                                 ? 'Sembunyikan Informasi'
                                 : 'Tampilkan Informasi',
@@ -258,7 +258,41 @@ class _DashboardPageState extends State<DashboardPage> {
 
               const SizedBox(height: 16),
 
-              // Daftar mata kuliah.
+              // EKSPERIMEN TAHAP 2: PROP DRILLING.
+              // Parent meneruskan nilai yang sama kepada dua child.
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Eksperimen Favorites - Tahap 2',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Child pertama menerima nilai melalui constructor.
+                      FavoriteStatusChild(isFavorite: isFavorite),
+
+                      const SizedBox(height: 8),
+
+                      // Child kedua menerima nilai dan callback.
+                      FavoriteToggleChild(
+                        isFavorite: isFavorite,
+                        onToggle: toggleFavorite,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Daftar mata kuliah tetap seperti sebelumnya.
               const Text(
                 'Daftar Mata Kuliah',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -273,6 +307,43 @@ class _DashboardPageState extends State<DashboardPage> {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+// CHILD 1: hanya menerima dan menampilkan nilai Favorites.
+class FavoriteStatusChild extends StatelessWidget {
+  final bool isFavorite;
+
+  const FavoriteStatusChild({super.key, required this.isFavorite});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text('Status Favorites: ${isFavorite ? 'Aktif' : 'Tidak aktif'}');
+  }
+}
+
+// CHILD 2: menerima nilai Favorites dan callback dari parent.
+class FavoriteToggleChild extends StatelessWidget {
+  final bool isFavorite;
+  final VoidCallback onToggle;
+
+  const FavoriteToggleChild({
+    super.key,
+    required this.isFavorite,
+    required this.onToggle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: FilledButton(
+        onPressed: onToggle,
+        child: Text(
+          isFavorite ? 'Ubah menjadi Tidak Aktif' : 'Ubah menjadi Aktif',
+        ),
       ),
     );
   }
@@ -302,9 +373,7 @@ class CourseDetailPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Center(child: Icon(Icons.menu_book, size: 64)),
-
                   const SizedBox(height: 20),
-
                   Text(
                     course['title'] as String,
                     style: const TextStyle(
@@ -312,33 +381,23 @@ class CourseDetailPage extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-
                   const Divider(height: 32),
-
                   _detailRow('Kode Mata Kuliah', course['code'].toString()),
-
                   _detailRow('Jumlah SKS', '${course['credits']} SKS'),
-
                   _detailRow('Status', statusText),
-
                   const Divider(height: 32),
-
                   const Text(
                     'Identitas Mahasiswa',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-
                   const SizedBox(height: 12),
-
                   _detailRow('Nama', studentName),
                   _detailRow('NIM', studentId),
                 ],
               ),
             ),
           ),
-
           const SizedBox(height: 16),
-
           FilledButton.icon(
             onPressed: () {
               Navigator.pop(context);
