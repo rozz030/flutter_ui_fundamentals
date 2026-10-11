@@ -1,6 +1,6 @@
 // =============================================================
-// Pertemuan 6 - Tahap 12
-// Refactor Struktur Folder
+// Pertemuan 6 - Tahap 14
+// Mini Project Integrasi: Course Explorer v2
 // Nama : Komang Rossi Adi Utama
 // NIM  : 2415051106
 // =============================================================
@@ -11,7 +11,7 @@ import 'package:provider/provider.dart';
 import 'providers/course_provider.dart';
 import 'providers/favorite_notifier.dart';
 import 'repositories/course_repository.dart';
-import 'screens/dashboard_page.dart';
+import 'screens/main_shell.dart';
 import 'services/course_service.dart';
 
 void main() {
@@ -34,12 +34,12 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'Learning Dashboard',
+        title: 'Course Explorer v2',
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
           useMaterial3: true,
         ),
-        home: const DashboardPage(),
+        home: const MainShell(),
       ),
     );
   }

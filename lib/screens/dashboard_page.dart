@@ -1,6 +1,6 @@
 // =============================================================
-// Pertemuan 6 - Tahap 13
-// Screen: DashboardPage + AppBar Favorites
+// Pertemuan 6 - Tahap 14
+// Screen: DashboardPage
 // =============================================================
 
 import 'package:flutter/material.dart';
@@ -13,7 +13,6 @@ import '../services/student_service.dart';
 import '../widgets/course_async_section.dart';
 import '../widgets/read_demo_card.dart';
 import '../widgets/watch_demo_card.dart';
-import 'favorites_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -52,38 +51,7 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Learning Dashboard'),
-        actions: [
-          // ---------- TAHAP 13: Tombol ke FavoritesPage ----------
-          Consumer<FavoriteNotifier>(
-            builder: (context, favNotifier, _) {
-              final count = favNotifier.count;
-              return Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: TextButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const FavoritesPage(),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.favorite, color: Colors.red),
-                  label: Text(
-                    '$count',
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Learning Dashboard')),
       body: FutureBuilder<Map<String, dynamic>>(
         future: studentFuture,
         builder: (context, snapshot) {
@@ -137,7 +105,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
               const SizedBox(height: 16),
 
-              // ---------- Async Section (Tahap 11 + 13) ----------
+              // ---------- Async Section ----------
               const CourseAsyncSection(),
 
               const SizedBox(height: 16),
