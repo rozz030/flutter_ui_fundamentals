@@ -1,6 +1,6 @@
 // =============================================================
-// Pertemuan 6 - Tahap 3
-// Lifting State Up & Single Source of Truth
+// Pertemuan 6 - Tahap 4
+// ValueNotifier & ValueListenableBuilder
 // Nama : Komang Rossi Adi Utama
 // NIM  : 2415051106
 // =============================================================
@@ -43,7 +43,6 @@ Widget buildSummaryCard(String value, String label, IconData icon) {
 
 // =============================================================
 // TAHAP 3: buildCourseCard menerima isFavorite dan onFavoriteChanged.
-// Child TIDAK menyimpan state sendiri - hanya menerima dan mengirim aksi.
 // =============================================================
 Widget buildCourseCard(
   BuildContext context,
@@ -114,15 +113,22 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   late Future<Map<String, dynamic>> studentFuture;
 
-  // Local State (Tahap 1) - hanya dipakai Dashboard.
+  // Local State (Tahap 1)
   bool showExtraInfo = false;
 
-  // ===========================================================
-  // TAHAP 3: SINGLE SOURCE OF TRUTH.
-  // Satu-satunya tempat nilai favorit disimpan.
-  // Semua widget di bawah membaca dari sini.
-  // ===========================================================
+  // Tahap 3: single source of truth untuk status favorit
   bool isFavorite = false;
+
+  // ===========================================================
+  // TAHAP 4: ValueNotifier<int>
+  // Wadah untuk satu nilai (jumlah favorit).
+  // Siapa pun yang mendengarkan akan otomatis di-rebuild
+  // saat nilainya berubah - TANPA memanggil setState().
+  // ===========================================================
+  final ValueNotifier<int> favoriteCount = ValueNotifier<int>(0);
+
+  // ValueNotifier kedua untuk demo perbandingan: penghitung klik.
+  final ValueNotifier<int> clickCounter = ValueNotifier<int>(0);
 
   @override
   void initState() {
@@ -130,8 +136,22 @@ class _DashboardPageState extends State<DashboardPage> {
     studentFuture = loadStudentData();
   }
 
-  // Satu-satunya method yang mengubah state favorit.
-  // Dipanggil oleh child lewat callback onToggle / onFavoriteChanged.
+  @override
+  void dispose() {
+    // WAJIB: bersihkan ValueNotifier agar tidak memory leak.
+    favoriteCount.dispose();
+    clickCounter.dispose();
+    super.dispose();
+  }
+
+  // Method yang memakai setState() - untuk perbandingan.
+  void incrementWithSetState() {
+    setState(() {
+      // Tidak ada state int di sini, kita pakai dummy supaya
+      // setState benar-benar rebuild seluruh halaman.
+    });
+  }
+
   void toggleFavorite() {
     setState(() {
       isFavorite = !isFavorite;
@@ -203,7 +223,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
               const SizedBox(height: 16),
 
-              // ---------- Ringkasan pembelajaran ----------
+              // ---------- Ringkasan ----------
               const Text(
                 'Ringkasan Pembelajaran',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -286,14 +306,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
               const SizedBox(height: 16),
 
-              // =================================================
-              // TAHAP 3: LIFTING STATE UP & SINGLE SOURCE OF TRUTH.
-              // Parent memegang satu nilai `isFavorite`.
-              // Tiga widget berbeda membaca dari nilai yang sama:
-              //   (1) FavoriteStatusChild   -> menampilkan teks status
-              //   (2) FavoriteToggleChild   -> tombol pengubah
-              //   (3) Semua CourseCard      -> ikon hati
-              // =================================================
+              // ---------- TAHAP 3: Lifting State Up ----------
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -313,25 +326,140 @@ class _DashboardPageState extends State<DashboardPage> {
                         style: TextStyle(color: Colors.grey),
                       ),
                       const SizedBox(height: 12),
-
-                      // (1) Child hanya menerima data.
                       FavoriteStatusChild(isFavorite: isFavorite),
-
                       const SizedBox(height: 8),
-
-                      // (2) Child menerima data + callback.
                       FavoriteToggleChild(
                         isFavorite: isFavorite,
                         onToggle: toggleFavorite,
                       ),
-
                       const SizedBox(height: 8),
-
-                      // Info tambahan untuk membuktikan konsistensi.
                       Text(
                         'Nilai saat ini: '
                         '${isFavorite ? "FAVORIT" : "BUKAN FAVORIT"}',
                         style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // =================================================
+              // TAHAP 4: ValueNotifier & ValueListenableBuilder
+              // -------------------------------------------------
+              // Bandingkan dengan setState():
+              // - setState()   -> rebuild SELURUH halaman
+              // - ValueNotifier -> rebuild HANYA widget pembungkusnya
+              //
+              // Buktikan: tambahkan print() di build() parent,
+              // lalu klik tombol setState vs tombol ValueNotifier.
+              // =================================================
+              Card(
+                color: Colors.blue.shade50,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'ValueNotifier - Tahap 4',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Satu nilai observable, listener sederhana.',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // ---------- ValueNotifier #1: favoriteCount ----------
+                      const Text(
+                        'Contoh 1: Jumlah Favorit',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // ValueListenableBuilder HANYA membungkus Text ini.
+                      // Saat favoriteCount berubah, hanya Text ini yang rebuild.
+                      ValueListenableBuilder<int>(
+                        valueListenable: favoriteCount,
+                        builder: (context, value, child) {
+                          return Row(
+                            children: [
+                              const Icon(Icons.favorite, color: Colors.red),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Jumlah Favorit: $value',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () {
+                                if (favoriteCount.value > 0) {
+                                  favoriteCount.value--;
+                                }
+                              },
+                              icon: const Icon(Icons.remove),
+                              label: const Text('Kurangi'),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: FilledButton.icon(
+                              onPressed: () {
+                                favoriteCount.value++;
+                              },
+                              icon: const Icon(Icons.add),
+                              label: const Text('Tambah'),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const Divider(height: 32),
+
+                      // ---------- ValueNotifier #2: clickCounter ----------
+                      const Text(
+                        'Contoh 2: Penghitung Klik',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+
+                      ValueListenableBuilder<int>(
+                        valueListenable: clickCounter,
+                        builder: (context, value, child) {
+                          return Text(
+                            'Total klik: $value kali',
+                            style: const TextStyle(fontSize: 16),
+                          );
+                        },
+                      ),
+
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.tonal(
+                          onPressed: () {
+                            // Perubahan nilai TANPA setState().
+                            clickCounter.value++;
+                          },
+                          child: const Text('Klik saya (tanpa setState)'),
+                        ),
                       ),
                     ],
                   ),
@@ -347,8 +475,6 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
               const SizedBox(height: 8),
 
-              // (3) Setiap CourseCard juga membaca `isFavorite`
-              //     yang sama dari parent.
               ...courses.map(
                 (course) => buildCourseCard(
                   context,
@@ -366,7 +492,7 @@ class _DashboardPageState extends State<DashboardPage> {
 }
 
 // =============================================================
-// CHILD 1: hanya menerima nilai, tidak menyimpan state.
+// CHILD 1: hanya menerima nilai.
 // =============================================================
 class FavoriteStatusChild extends StatelessWidget {
   final bool isFavorite;
@@ -380,7 +506,7 @@ class FavoriteStatusChild extends StatelessWidget {
 }
 
 // =============================================================
-// CHILD 2: menerima nilai + callback, tidak menyimpan state.
+// CHILD 2: menerima nilai + callback.
 // =============================================================
 class FavoriteToggleChild extends StatelessWidget {
   final bool isFavorite;
@@ -407,7 +533,7 @@ class FavoriteToggleChild extends StatelessWidget {
 }
 
 // =============================================================
-// Halaman Detail Mata Kuliah (tetap sama seperti sebelumnya).
+// Halaman Detail Mata Kuliah.
 // =============================================================
 class CourseDetailPage extends StatelessWidget {
   final Map<String, dynamic> course;
