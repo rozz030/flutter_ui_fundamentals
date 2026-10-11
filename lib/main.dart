@@ -1,6 +1,6 @@
 // =============================================================
-// Pertemuan 6 - Tahap 6
-// Memasang Provider pada Widget Tree
+// Pertemuan 6 - Tahap 7
+// context.watch(), context.read(), dan Consumer
 // Nama : Komang Rossi Adi Utama
 // NIM  : 2415051106
 // =============================================================
@@ -127,6 +127,106 @@ Widget buildCourseCard(
   );
 }
 
+// =============================================================
+// TAHAP 7: WATCH DEMO
+// -------------------------------------------------------------
+// Menggunakan context.watch<FavoriteNotifier>() di dalam build.
+// Seluruh widget ini REBUILD saat notifyListeners() dipanggil.
+// =============================================================
+class WatchDemoCard extends StatelessWidget {
+  const WatchDemoCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // watch() -> dengarkan perubahan dan rebuild widget ini.
+    final notifier = context.watch<FavoriteNotifier>();
+
+    return Card(
+      color: Colors.purple.shade50,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'context.watch - Tahap 7',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Widget ini rebuild saat state berubah.',
+              style: TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Status: '
+              '${notifier.isFavorite ? "FAVORIT" : "BUKAN FAVORIT"}',
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            Text('Jumlah toggle: ${notifier.toggleCount} kali'),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// =============================================================
+// TAHAP 7: READ DEMO
+// -------------------------------------------------------------
+// Menggunakan context.read<FavoriteNotifier>() di dalam onPressed.
+// read() TIDAK mendengarkan, hanya memanggil aksi.
+// =============================================================
+class ReadDemoCard extends StatelessWidget {
+  const ReadDemoCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: Colors.teal.shade50,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'context.read - Tahap 7',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Tombol hanya memanggil aksi, tidak listen.',
+              style: TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: () {
+                      // read: ambil notifier tanpa listen.
+                      context.read<FavoriteNotifier>().toggle();
+                    },
+                    icon: const Icon(Icons.touch_app),
+                    label: const Text('Toggle via read'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton(
+                  onPressed: () {
+                    context.read<FavoriteNotifier>().reset();
+                  },
+                  child: const Text('Reset'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
@@ -152,7 +252,6 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   void dispose() {
-    // FavoriteNotifier TIDAK di-dispose di sini, karena dimiliki Provider.
     favoriteCount.dispose();
     clickCounter.dispose();
     super.dispose();
@@ -307,7 +406,22 @@ class _DashboardPageState extends State<DashboardPage> {
               const SizedBox(height: 16),
 
               // =================================================
-              // TAHAP 6: Card Provider
+              // TAHAP 7 - context.watch()
+              // =================================================
+              const WatchDemoCard(),
+
+              const SizedBox(height: 16),
+
+              // =================================================
+              // TAHAP 7 - context.read()
+              // =================================================
+              const ReadDemoCard(),
+
+              const SizedBox(height: 16),
+
+              // =================================================
+              // TAHAP 6 - Provider dengan Consumer
+              // Consumer hanya rebuild area kecil (card oranye ini).
               // =================================================
               Consumer<FavoriteNotifier>(
                 builder: (context, notifier, _) {
@@ -322,7 +436,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Provider - Tahap 6',
+                            'Consumer - Tahap 6 & 7',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -330,8 +444,7 @@ class _DashboardPageState extends State<DashboardPage> {
                           ),
                           const SizedBox(height: 4),
                           const Text(
-                            'ChangeNotifier disediakan lewat Provider, '
-                            'diakses via context.',
+                            'Consumer rebuild hanya area card ini saja.',
                             style: TextStyle(color: Colors.grey),
                           ),
                           const SizedBox(height: 12),
@@ -389,7 +502,7 @@ class _DashboardPageState extends State<DashboardPage> {
               const SizedBox(height: 16),
 
               // =================================================
-              // TAHAP 4: ValueNotifier
+              // TAHAP 4 - ValueNotifier
               // =================================================
               Card(
                 color: Colors.blue.shade50,
@@ -494,7 +607,7 @@ class _DashboardPageState extends State<DashboardPage> {
               const SizedBox(height: 16),
 
               // =================================================
-              // Daftar Mata Kuliah - baca dari Provider
+              // Daftar Mata Kuliah - pakai Consumer
               // =================================================
               const Text(
                 'Daftar Mata Kuliah',
