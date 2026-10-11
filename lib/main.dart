@@ -1,6 +1,6 @@
 // =============================================================
-// Pertemuan 6 - Tahap 7
-// context.watch(), context.read(), dan Consumer
+// Pertemuan 6 - Tahap 8
+// Membuat Model Course
 // Nama : Komang Rossi Adi Utama
 // NIM  : 2415051106
 // =============================================================
@@ -10,6 +10,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:provider/provider.dart';
+
+import 'models/course.dart';
 
 const String studentName = 'Komang Rossi Adi Utama';
 const String studentId = '2415051106';
@@ -66,40 +68,29 @@ class FavoriteNotifier extends ChangeNotifier {
 }
 
 // =============================================================
-// TAHAP 3: buildCourseCard
+// TAHAP 8: buildCourseCard sekarang menerima Course object.
 // =============================================================
 Widget buildCourseCard(
   BuildContext context,
-  Map<String, dynamic> course, {
+  Course course, {
   required bool isFavorite,
   required VoidCallback onFavoriteChanged,
 }) {
-  final String status = course['status'] as String;
-
-  final bool isDone = status == 'done';
-  final bool isActive = status == 'active';
-
-  final IconData statusIcon = isDone
+  final IconData statusIcon = course.isDone
       ? Icons.check_circle
-      : isActive
+      : course.isActive
       ? Icons.play_circle
       : Icons.schedule;
-
-  final String statusText = isDone
-      ? 'Selesai'
-      : isActive
-      ? 'Aktif'
-      : 'Direncanakan';
 
   return Card(
     margin: const EdgeInsets.only(bottom: 10),
     child: ListTile(
       leading: Icon(statusIcon),
       title: Text(
-        course['title'] as String,
+        course.title,
         style: const TextStyle(fontWeight: FontWeight.bold),
       ),
-      subtitle: Text('${course['code']} • ${course['credits']} SKS'),
+      subtitle: Text('${course.code} • ${course.credits} SKS'),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -118,8 +109,7 @@ Widget buildCourseCard(
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) =>
-                CourseDetailPage(course: course, statusText: statusText),
+            builder: (context) => CourseDetailPage(course: course),
           ),
         );
       },
@@ -129,16 +119,12 @@ Widget buildCourseCard(
 
 // =============================================================
 // TAHAP 7: WATCH DEMO
-// -------------------------------------------------------------
-// Menggunakan context.watch<FavoriteNotifier>() di dalam build.
-// Seluruh widget ini REBUILD saat notifyListeners() dipanggil.
 // =============================================================
 class WatchDemoCard extends StatelessWidget {
   const WatchDemoCard({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // watch() -> dengarkan perubahan dan rebuild widget ini.
     final notifier = context.watch<FavoriteNotifier>();
 
     return Card(
@@ -173,9 +159,6 @@ class WatchDemoCard extends StatelessWidget {
 
 // =============================================================
 // TAHAP 7: READ DEMO
-// -------------------------------------------------------------
-// Menggunakan context.read<FavoriteNotifier>() di dalam onPressed.
-// read() TIDAK mendengarkan, hanya memanggil aksi.
 // =============================================================
 class ReadDemoCard extends StatelessWidget {
   const ReadDemoCard({super.key});
@@ -204,7 +187,6 @@ class ReadDemoCard extends StatelessWidget {
                 Expanded(
                   child: FilledButton.icon(
                     onPressed: () {
-                      // read: ambil notifier tanpa listen.
                       context.read<FavoriteNotifier>().toggle();
                     },
                     icon: const Icon(Icons.touch_app),
@@ -237,10 +219,8 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   late Future<Map<String, dynamic>> studentFuture;
 
-  // Local State (Tahap 1)
   bool showExtraInfo = false;
 
-  // Tahap 4: ValueNotifier
   final ValueNotifier<int> favoriteCount = ValueNotifier<int>(0);
   final ValueNotifier<int> clickCounter = ValueNotifier<int>(0);
 
@@ -278,13 +258,20 @@ class _DashboardPageState extends State<DashboardPage> {
 
           final data = snapshot.data!;
           final student = data['student'] as Map<String, dynamic>;
-          final courses = data['courses'] as List<dynamic>;
+
+          // =================================================
+          // TAHAP 8: Ubah data JSON menjadi List<Course>
+          // dengan Course.fromJson().
+          // =================================================
+          final List<Course> courses = (data['courses'] as List<dynamic>)
+              .map((e) => Course.fromJson(e as Map<String, dynamic>))
+              .toList();
 
           final int totalCourses = courses.length;
 
           final int totalCredits = courses.fold<int>(
             0,
-            (sum, course) => sum + (course['credits'] as int),
+            (sum, course) => sum + course.credits,
           );
 
           return ListView(
@@ -358,7 +345,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
               const SizedBox(height: 16),
 
-              // ---------- LOCAL STATE (Tahap 1) ----------
+              // ---------- LOCAL STATE ----------
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -405,24 +392,52 @@ class _DashboardPageState extends State<DashboardPage> {
 
               const SizedBox(height: 16),
 
-              // =================================================
-              // TAHAP 7 - context.watch()
-              // =================================================
+              // ---------- TAHAP 8: Model Course Demo ----------
+              Card(
+                color: Colors.indigo.shade50,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Model Course - Tahap 8',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Data JSON sudah di-parse ke object Course.',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                      const SizedBox(height: 12),
+                      Text('Jumlah course (object): ${courses.length}'),
+                      if (courses.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          'Contoh: '
+                          '${courses.first.code} - '
+                          '${courses.first.title} '
+                          '(${courses.first.statusLabel})',
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // ---------- TAHAP 7: watch & read ----------
               const WatchDemoCard(),
-
               const SizedBox(height: 16),
-
-              // =================================================
-              // TAHAP 7 - context.read()
-              // =================================================
               const ReadDemoCard(),
-
               const SizedBox(height: 16),
 
-              // =================================================
-              // TAHAP 6 - Provider dengan Consumer
-              // Consumer hanya rebuild area kecil (card oranye ini).
-              // =================================================
+              // ---------- TAHAP 6: Consumer ----------
               Consumer<FavoriteNotifier>(
                 builder: (context, notifier, _) {
                   final bool fav = notifier.isFavorite;
@@ -501,9 +516,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
               const SizedBox(height: 16),
 
-              // =================================================
-              // TAHAP 4 - ValueNotifier
-              // =================================================
+              // ---------- TAHAP 4: ValueNotifier ----------
               Card(
                 color: Colors.blue.shade50,
                 child: Padding(
@@ -606,9 +619,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
               const SizedBox(height: 16),
 
-              // =================================================
-              // Daftar Mata Kuliah - pakai Consumer
-              // =================================================
+              // ---------- Daftar Mata Kuliah ----------
               const Text(
                 'Daftar Mata Kuliah',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -619,10 +630,9 @@ class _DashboardPageState extends State<DashboardPage> {
                 builder: (context, notifier, _) {
                   return Column(
                     children: courses.map((course) {
-                      final map = course as Map<String, dynamic>;
                       return buildCourseCard(
                         context,
-                        map,
+                        course,
                         isFavorite: notifier.isFavorite,
                         onFavoriteChanged: notifier.toggle,
                       );
@@ -639,17 +649,12 @@ class _DashboardPageState extends State<DashboardPage> {
 }
 
 // =============================================================
-// Halaman Detail Mata Kuliah
+// TAHAP 8: CourseDetailPage menerima Course object.
 // =============================================================
 class CourseDetailPage extends StatelessWidget {
-  final Map<String, dynamic> course;
-  final String statusText;
+  final Course course;
 
-  const CourseDetailPage({
-    super.key,
-    required this.course,
-    required this.statusText,
-  });
+  const CourseDetailPage({super.key, required this.course});
 
   @override
   Widget build(BuildContext context) {
@@ -667,16 +672,16 @@ class CourseDetailPage extends StatelessWidget {
                   const Center(child: Icon(Icons.menu_book, size: 64)),
                   const SizedBox(height: 20),
                   Text(
-                    course['title'] as String,
+                    course.title,
                     style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const Divider(height: 32),
-                  _detailRow('Kode Mata Kuliah', course['code'].toString()),
-                  _detailRow('Jumlah SKS', '${course['credits']} SKS'),
-                  _detailRow('Status', statusText),
+                  _detailRow('Kode Mata Kuliah', course.code),
+                  _detailRow('Jumlah SKS', '${course.credits} SKS'),
+                  _detailRow('Status', course.statusLabel),
                   const Divider(height: 32),
                   const Text(
                     'Identitas Mahasiswa',
@@ -721,7 +726,7 @@ class CourseDetailPage extends StatelessWidget {
 }
 
 // =============================================================
-// Root App dengan Provider
+// Root App
 // =============================================================
 void main() {
   runApp(const MyApp());
