@@ -1,6 +1,6 @@
 // =============================================================
-// Pertemuan 6 - Tahap 8
-// Membuat Model Course
+// Pertemuan 6 - Tahap 9
+// Service / Data Source
 // Nama : Komang Rossi Adi Utama
 // NIM  : 2415051106
 // =============================================================
@@ -12,10 +12,12 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:provider/provider.dart';
 
 import 'models/course.dart';
+import 'services/course_service.dart';
 
 const String studentName = 'Komang Rossi Adi Utama';
 const String studentId = '2415051106';
 
+// Fungsi lama: hanya untuk membaca data mahasiswa (profil).
 Future<Map<String, dynamic>> loadStudentData() async {
   final jsonString = await rootBundle.loadString(
     'assets/data/student_data.json',
@@ -68,7 +70,7 @@ class FavoriteNotifier extends ChangeNotifier {
 }
 
 // =============================================================
-// TAHAP 8: buildCourseCard sekarang menerima Course object.
+// TAHAP 8: buildCourseCard
 // =============================================================
 Widget buildCourseCard(
   BuildContext context,
@@ -217,7 +219,14 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
+  // ===========================================================
+  // TAHAP 9: Instance CourseService.
+  // UI sekarang tidak langsung baca rootBundle untuk courses.
+  // ===========================================================
+  final CourseService courseService = CourseService();
+
   late Future<Map<String, dynamic>> studentFuture;
+  late Future<List<Course>> coursesFuture;
 
   bool showExtraInfo = false;
 
@@ -228,6 +237,8 @@ class _DashboardPageState extends State<DashboardPage> {
   void initState() {
     super.initState();
     studentFuture = loadStudentData();
+    // Courses diambil lewat service, bukan langsung rootBundle.
+    coursesFuture = courseService.loadCourses();
   }
 
   @override
@@ -258,21 +269,6 @@ class _DashboardPageState extends State<DashboardPage> {
 
           final data = snapshot.data!;
           final student = data['student'] as Map<String, dynamic>;
-
-          // =================================================
-          // TAHAP 8: Ubah data JSON menjadi List<Course>
-          // dengan Course.fromJson().
-          // =================================================
-          final List<Course> courses = (data['courses'] as List<dynamic>)
-              .map((e) => Course.fromJson(e as Map<String, dynamic>))
-              .toList();
-
-          final int totalCourses = courses.length;
-
-          final int totalCredits = courses.fold<int>(
-            0,
-            (sum, course) => sum + course.credits,
-          );
 
           return ListView(
             padding: const EdgeInsets.all(16),
@@ -309,21 +305,147 @@ class _DashboardPageState extends State<DashboardPage> {
 
               const SizedBox(height: 16),
 
-              // ---------- Ringkasan ----------
-              const Text(
-                'Ringkasan Pembelajaran',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  buildSummaryCard(
-                    '$totalCourses',
-                    'Mata Kuliah',
-                    Icons.menu_book,
-                  ),
-                  buildSummaryCard('$totalCredits', 'Total SKS', Icons.school),
-                ],
+              // =================================================
+              // TAHAP 9: FutureBuilder untuk data dari Service.
+              // Courses diambil lewat CourseService, bukan
+              // dari data['courses'] langsung.
+              // =================================================
+              FutureBuilder<List<Course>>(
+                future: coursesFuture,
+                builder: (context, courseSnap) {
+                  // Loading state
+                  if (courseSnap.connectionState == ConnectionState.waiting) {
+                    return const Card(
+                      child: Padding(
+                        padding: EdgeInsets.all(24),
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
+                    );
+                  }
+
+                  // Error state
+                  if (courseSnap.hasError) {
+                    return Card(
+                      color: Colors.red.shade50,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Text(
+                          'Gagal memuat courses: ${courseSnap.error}',
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    );
+                  }
+
+                  // Data state
+                  final List<Course> courses = courseSnap.data ?? <Course>[];
+
+                  final int totalCourses = courses.length;
+
+                  final int totalCredits = courses.fold<int>(
+                    0,
+                    (sum, course) => sum + course.credits,
+                  );
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // ---------- Ringkasan ----------
+                      const Text(
+                        'Ringkasan Pembelajaran',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          buildSummaryCard(
+                            '$totalCourses',
+                            'Mata Kuliah',
+                            Icons.menu_book,
+                          ),
+                          buildSummaryCard(
+                            '$totalCredits',
+                            'Total SKS',
+                            Icons.school,
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // ---------- Card Service Demo ----------
+                      Card(
+                        color: Colors.cyan.shade50,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'CourseService - Tahap 9',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              const Text(
+                                'Data courses diambil lewat '
+                                'CourseService, bukan langsung '
+                                'rootBundle.',
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                              const SizedBox(height: 12),
+                              Text('Jumlah course: ${courses.length}'),
+                              if (courses.isNotEmpty) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Contoh: '
+                                  '${courses.first.code} - '
+                                  '${courses.first.title} '
+                                  '(${courses.first.statusLabel})',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // ---------- Daftar Mata Kuliah ----------
+                      const Text(
+                        'Daftar Mata Kuliah',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      Consumer<FavoriteNotifier>(
+                        builder: (context, notifier, _) {
+                          return Column(
+                            children: courses.map((course) {
+                              return buildCourseCard(
+                                context,
+                                course,
+                                isFavorite: notifier.isFavorite,
+                                onFavoriteChanged: notifier.toggle,
+                              );
+                            }).toList(),
+                          );
+                        },
+                      ),
+                    ],
+                  );
+                },
               ),
 
               const SizedBox(height: 16),
@@ -392,46 +514,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
               const SizedBox(height: 16),
 
-              // ---------- TAHAP 8: Model Course Demo ----------
-              Card(
-                color: Colors.indigo.shade50,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Model Course - Tahap 8',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Data JSON sudah di-parse ke object Course.',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                      const SizedBox(height: 12),
-                      Text('Jumlah course (object): ${courses.length}'),
-                      if (courses.isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          'Contoh: '
-                          '${courses.first.code} - '
-                          '${courses.first.title} '
-                          '(${courses.first.statusLabel})',
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // ---------- TAHAP 7: watch & read ----------
+              // ---------- TAHAP 7 ----------
               const WatchDemoCard(),
               const SizedBox(height: 16),
               const ReadDemoCard(),
@@ -516,7 +599,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
               const SizedBox(height: 16),
 
-              // ---------- TAHAP 4: ValueNotifier ----------
+              // ---------- TAHAP 4 ----------
               Card(
                 color: Colors.blue.shade50,
                 child: Padding(
@@ -616,30 +699,6 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                 ),
               ),
-
-              const SizedBox(height: 16),
-
-              // ---------- Daftar Mata Kuliah ----------
-              const Text(
-                'Daftar Mata Kuliah',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-
-              Consumer<FavoriteNotifier>(
-                builder: (context, notifier, _) {
-                  return Column(
-                    children: courses.map((course) {
-                      return buildCourseCard(
-                        context,
-                        course,
-                        isFavorite: notifier.isFavorite,
-                        onFavoriteChanged: notifier.toggle,
-                      );
-                    }).toList(),
-                  );
-                },
-              ),
             ],
           );
         },
@@ -649,7 +708,7 @@ class _DashboardPageState extends State<DashboardPage> {
 }
 
 // =============================================================
-// TAHAP 8: CourseDetailPage menerima Course object.
+// CourseDetailPage
 // =============================================================
 class CourseDetailPage extends StatelessWidget {
   final Course course;
