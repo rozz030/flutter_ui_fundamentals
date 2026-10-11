@@ -1,3 +1,10 @@
+// =============================================================
+// Pertemuan 6 - Tahap 3
+// Lifting State Up & Single Source of Truth
+// Nama : Komang Rossi Adi Utama
+// NIM  : 2415051106
+// =============================================================
+
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -10,7 +17,6 @@ Future<Map<String, dynamic>> loadStudentData() async {
   final jsonString = await rootBundle.loadString(
     'assets/data/student_data.json',
   );
-
   return jsonDecode(jsonString) as Map<String, dynamic>;
 }
 
@@ -35,7 +41,16 @@ Widget buildSummaryCard(String value, String label, IconData icon) {
   );
 }
 
-Widget buildCourseCard(BuildContext context, Map<String, dynamic> course) {
+// =============================================================
+// TAHAP 3: buildCourseCard menerima isFavorite dan onFavoriteChanged.
+// Child TIDAK menyimpan state sendiri - hanya menerima dan mengirim aksi.
+// =============================================================
+Widget buildCourseCard(
+  BuildContext context,
+  Map<String, dynamic> course, {
+  required bool isFavorite,
+  required VoidCallback onFavoriteChanged,
+}) {
   final String status = course['status'] as String;
 
   final bool isDone = status == 'done';
@@ -62,7 +77,20 @@ Widget buildCourseCard(BuildContext context, Map<String, dynamic> course) {
         style: const TextStyle(fontWeight: FontWeight.bold),
       ),
       subtitle: Text('${course['code']} • ${course['credits']} SKS'),
-      trailing: const Icon(Icons.chevron_right),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            tooltip: 'Toggle Favorit',
+            icon: Icon(
+              isFavorite ? Icons.favorite : Icons.favorite_border,
+              color: isFavorite ? Colors.red : null,
+            ),
+            onPressed: onFavoriteChanged,
+          ),
+          const Icon(Icons.chevron_right),
+        ],
+      ),
       onTap: () {
         Navigator.push(
           context,
@@ -86,10 +114,14 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   late Future<Map<String, dynamic>> studentFuture;
 
-  // Local State Tahap 1.
+  // Local State (Tahap 1) - hanya dipakai Dashboard.
   bool showExtraInfo = false;
 
-  // Satu nilai Favorites yang dimiliki parent untuk Tahap 2.
+  // ===========================================================
+  // TAHAP 3: SINGLE SOURCE OF TRUTH.
+  // Satu-satunya tempat nilai favorit disimpan.
+  // Semua widget di bawah membaca dari sini.
+  // ===========================================================
   bool isFavorite = false;
 
   @override
@@ -98,7 +130,8 @@ class _DashboardPageState extends State<DashboardPage> {
     studentFuture = loadStudentData();
   }
 
-  // Callback dari child untuk mengubah nilai pada parent.
+  // Satu-satunya method yang mengubah state favorit.
+  // Dipanggil oleh child lewat callback onToggle / onFavoriteChanged.
   void toggleFavorite() {
     setState(() {
       isFavorite = !isFavorite;
@@ -138,7 +171,7 @@ class _DashboardPageState extends State<DashboardPage> {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              // Profil mahasiswa.
+              // ---------- Profil mahasiswa ----------
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -170,14 +203,12 @@ class _DashboardPageState extends State<DashboardPage> {
 
               const SizedBox(height: 16),
 
-              // Ringkasan pembelajaran.
+              // ---------- Ringkasan pembelajaran ----------
               const Text(
                 'Ringkasan Pembelajaran',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-
               const SizedBox(height: 8),
-
               Row(
                 children: [
                   buildSummaryCard(
@@ -191,7 +222,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
               const SizedBox(height: 16),
 
-              // Identitas dan pengujian layout.
+              // ---------- Identitas ----------
               const Row(
                 children: [
                   Icon(Icons.info),
@@ -208,7 +239,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
               const SizedBox(height: 16),
 
-              // LOCAL STATE - TAHAP 1.
+              // ---------- LOCAL STATE (Tahap 1) ----------
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -226,16 +257,13 @@ class _DashboardPageState extends State<DashboardPage> {
                       const Text('Nama: Komang Rossi Adi Utama'),
                       const Text('NIM: 2415051106'),
                       const SizedBox(height: 8),
-
                       if (showExtraInfo)
                         const Text(
                           'Informasi tambahan: Local State '
                           'dikelola menggunakan setState() '
                           'dan hanya digunakan pada Dashboard.',
                         ),
-
                       const SizedBox(height: 8),
-
                       SizedBox(
                         width: double.infinity,
                         child: FilledButton(
@@ -258,8 +286,14 @@ class _DashboardPageState extends State<DashboardPage> {
 
               const SizedBox(height: 16),
 
-              // EKSPERIMEN TAHAP 2: PROP DRILLING.
-              // Parent meneruskan nilai yang sama kepada dua child.
+              // =================================================
+              // TAHAP 3: LIFTING STATE UP & SINGLE SOURCE OF TRUTH.
+              // Parent memegang satu nilai `isFavorite`.
+              // Tiga widget berbeda membaca dari nilai yang sama:
+              //   (1) FavoriteStatusChild   -> menampilkan teks status
+              //   (2) FavoriteToggleChild   -> tombol pengubah
+              //   (3) Semua CourseCard      -> ikon hati
+              // =================================================
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -267,23 +301,37 @@ class _DashboardPageState extends State<DashboardPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Eksperimen Favorites - Tahap 2',
+                        'Lifting State Up - Tahap 3',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Satu sumber state (parent), tiga widget pembaca.',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                      const SizedBox(height: 12),
 
-                      // Child pertama menerima nilai melalui constructor.
+                      // (1) Child hanya menerima data.
                       FavoriteStatusChild(isFavorite: isFavorite),
 
                       const SizedBox(height: 8),
 
-                      // Child kedua menerima nilai dan callback.
+                      // (2) Child menerima data + callback.
                       FavoriteToggleChild(
                         isFavorite: isFavorite,
                         onToggle: toggleFavorite,
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      // Info tambahan untuk membuktikan konsistensi.
+                      Text(
+                        'Nilai saat ini: '
+                        '${isFavorite ? "FAVORIT" : "BUKAN FAVORIT"}',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
@@ -292,17 +340,22 @@ class _DashboardPageState extends State<DashboardPage> {
 
               const SizedBox(height: 16),
 
-              // Daftar mata kuliah tetap seperti sebelumnya.
+              // ---------- Daftar Mata Kuliah ----------
               const Text(
                 'Daftar Mata Kuliah',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-
               const SizedBox(height: 8),
 
+              // (3) Setiap CourseCard juga membaca `isFavorite`
+              //     yang sama dari parent.
               ...courses.map(
-                (course) =>
-                    buildCourseCard(context, course as Map<String, dynamic>),
+                (course) => buildCourseCard(
+                  context,
+                  course as Map<String, dynamic>,
+                  isFavorite: isFavorite,
+                  onFavoriteChanged: toggleFavorite,
+                ),
               ),
             ],
           );
@@ -312,7 +365,9 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 }
 
-// CHILD 1: hanya menerima dan menampilkan nilai Favorites.
+// =============================================================
+// CHILD 1: hanya menerima nilai, tidak menyimpan state.
+// =============================================================
 class FavoriteStatusChild extends StatelessWidget {
   final bool isFavorite;
 
@@ -320,11 +375,13 @@ class FavoriteStatusChild extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text('Status Favorites: ${isFavorite ? 'Aktif' : 'Tidak aktif'}');
+    return Text('Status Favorites: ${isFavorite ? "Aktif" : "Tidak aktif"}');
   }
 }
 
-// CHILD 2: menerima nilai Favorites dan callback dari parent.
+// =============================================================
+// CHILD 2: menerima nilai + callback, tidak menyimpan state.
+// =============================================================
 class FavoriteToggleChild extends StatelessWidget {
   final bool isFavorite;
   final VoidCallback onToggle;
@@ -349,6 +406,9 @@ class FavoriteToggleChild extends StatelessWidget {
   }
 }
 
+// =============================================================
+// Halaman Detail Mata Kuliah (tetap sama seperti sebelumnya).
+// =============================================================
 class CourseDetailPage extends StatelessWidget {
   final Map<String, dynamic> course;
   final String statusText;
@@ -428,6 +488,9 @@ class CourseDetailPage extends StatelessWidget {
   }
 }
 
+// =============================================================
+// Root App.
+// =============================================================
 void main() {
   runApp(const MyApp());
 }
