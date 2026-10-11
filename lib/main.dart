@@ -1,6 +1,6 @@
 // =============================================================
-// Pertemuan 6 - Tahap 10
-// Repository Pattern
+// Pertemuan 6 - Tahap 11
+// Provider untuk Async State
 // Nama : Komang Rossi Adi Utama
 // NIM  : 2415051106
 // =============================================================
@@ -12,13 +12,13 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:provider/provider.dart';
 
 import 'models/course.dart';
+import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
 import 'services/course_service.dart';
 
 const String studentName = 'Komang Rossi Adi Utama';
 const String studentId = '2415051106';
 
-// Fungsi lama: hanya untuk membaca data mahasiswa (profil).
 Future<Map<String, dynamic>> loadStudentData() async {
   final jsonString = await rootBundle.loadString(
     'assets/data/student_data.json',
@@ -48,7 +48,7 @@ Widget buildSummaryCard(String value, String label, IconData icon) {
 }
 
 // =============================================================
-// TAHAP 5: CHANGE NOTIFIER
+// TAHAP 5: CHANGE NOTIFIER untuk favorit
 // =============================================================
 class FavoriteNotifier extends ChangeNotifier {
   bool _isFavorite = false;
@@ -220,17 +220,7 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  // ===========================================================
-  // TAHAP 10: Repository membungkus Service.
-  // UI sekarang memanggil Repository, bukan Service langsung.
-  // ===========================================================
-  final CourseService courseService = CourseService();
-  late final CourseRepository courseRepository = CourseRepository(
-    courseService,
-  );
-
   late Future<Map<String, dynamic>> studentFuture;
-  late Future<List<Course>> coursesFuture;
 
   bool showExtraInfo = false;
 
@@ -241,8 +231,13 @@ class _DashboardPageState extends State<DashboardPage> {
   void initState() {
     super.initState();
     studentFuture = loadStudentData();
-    // TAHAP 10: panggil lewat Repository, bukan Service langsung.
-    coursesFuture = courseRepository.getCourses();
+
+    // TAHAP 11: minta CourseProvider memuat data
+    // setelah frame pertama selesai (karena Provider
+    // baru bisa diakses lewat context setelah build pertama).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<CourseProvider>().loadCourses();
+    });
   }
 
   @override
@@ -310,141 +305,10 @@ class _DashboardPageState extends State<DashboardPage> {
               const SizedBox(height: 16),
 
               // =================================================
-              // TAHAP 10: courses diambil lewat Repository.
+              // TAHAP 11: Async state lewat CourseProvider.
+              // Menggantikan FutureBuilder<List<Course>>.
               // =================================================
-              FutureBuilder<List<Course>>(
-                future: coursesFuture,
-                builder: (context, courseSnap) {
-                  if (courseSnap.connectionState == ConnectionState.waiting) {
-                    return const Card(
-                      child: Padding(
-                        padding: EdgeInsets.all(24),
-                        child: Center(child: CircularProgressIndicator()),
-                      ),
-                    );
-                  }
-
-                  if (courseSnap.hasError) {
-                    return Card(
-                      color: Colors.red.shade50,
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Text(
-                          'Gagal memuat courses: ${courseSnap.error}',
-                          style: const TextStyle(color: Colors.red),
-                        ),
-                      ),
-                    );
-                  }
-
-                  final List<Course> courses = courseSnap.data ?? <Course>[];
-
-                  final int totalCourses = courses.length;
-
-                  final int totalCredits = courses.fold<int>(
-                    0,
-                    (sum, course) => sum + course.credits,
-                  );
-
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // ---------- Ringkasan ----------
-                      const Text(
-                        'Ringkasan Pembelajaran',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          buildSummaryCard(
-                            '$totalCourses',
-                            'Mata Kuliah',
-                            Icons.menu_book,
-                          ),
-                          buildSummaryCard(
-                            '$totalCredits',
-                            'Total SKS',
-                            Icons.school,
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // ---------- Card Repository Demo ----------
-                      Card(
-                        color: Colors.lightGreen.shade50,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'CourseRepository - Tahap 10',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              const Text(
-                                'UI memanggil Repository, '
-                                'Repository memanggil Service.',
-                                style: TextStyle(color: Colors.grey),
-                              ),
-                              const SizedBox(height: 12),
-                              Text('Jumlah course: ${courses.length}'),
-                              if (courses.isNotEmpty) ...[
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Contoh: '
-                                  '${courses.first.code} - '
-                                  '${courses.first.title} '
-                                  '(${courses.first.statusLabel})',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // ---------- Daftar Mata Kuliah ----------
-                      const Text(
-                        'Daftar Mata Kuliah',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-
-                      Consumer<FavoriteNotifier>(
-                        builder: (context, notifier, _) {
-                          return Column(
-                            children: courses.map((course) {
-                              return buildCourseCard(
-                                context,
-                                course,
-                                isFavorite: notifier.isFavorite,
-                                onFavoriteChanged: notifier.toggle,
-                              );
-                            }).toList(),
-                          );
-                        },
-                      ),
-                    ],
-                  );
-                },
-              ),
+              const CourseAsyncSection(),
 
               const SizedBox(height: 16),
 
@@ -706,6 +570,172 @@ class _DashboardPageState extends State<DashboardPage> {
 }
 
 // =============================================================
+// TAHAP 11: Section yang membaca CourseProvider
+// Menggantikan FutureBuilder<List<Course>>.
+// Menangani tiga kondisi: loading, error, success.
+// =============================================================
+class CourseAsyncSection extends StatelessWidget {
+  const CourseAsyncSection({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // Consumer supaya hanya section ini yang rebuild saat
+    // CourseProvider.notifyListeners() dipanggil.
+    return Consumer<CourseProvider>(
+      builder: (context, provider, _) {
+        // -------- 1. LOADING --------
+        if (provider.isLoading) {
+          return const Card(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 12),
+                  Text('Memuat data courses...'),
+                ],
+              ),
+            ),
+          );
+        }
+
+        // -------- 2. ERROR --------
+        if (provider.error != null) {
+          return Card(
+            color: Colors.red.shade50,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Terjadi kesalahan',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(provider.error!),
+                  const SizedBox(height: 12),
+                  FilledButton.icon(
+                    onPressed: () {
+                      context.read<CourseProvider>().loadCourses();
+                    },
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Coba lagi'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        // -------- 3. SUCCESS --------
+        final List<Course> courses = provider.courses;
+
+        final int totalCourses = courses.length;
+
+        final int totalCredits = courses.fold<int>(
+          0,
+          (sum, course) => sum + course.credits,
+        );
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ---------- Ringkasan ----------
+            const Text(
+              'Ringkasan Pembelajaran',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                buildSummaryCard(
+                  '$totalCourses',
+                  'Mata Kuliah',
+                  Icons.menu_book,
+                ),
+                buildSummaryCard('$totalCredits', 'Total SKS', Icons.school),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            // ---------- Card Provider Async Demo ----------
+            Card(
+              color: Colors.amber.shade50,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'CourseProvider - Tahap 11',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Loading / Error / Success dikelola '
+                      'di satu tempat.',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                    const SizedBox(height: 12),
+                    Text('Jumlah course: ${courses.length}'),
+                    const SizedBox(height: 4),
+                    Text('isLoading: ${provider.isLoading}'),
+                    Text('error: ${provider.error ?? "tidak ada"}'),
+                    if (courses.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        'Contoh: '
+                        '${courses.first.code} - '
+                        '${courses.first.title} '
+                        '(${courses.first.statusLabel})',
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // ---------- Daftar Mata Kuliah ----------
+            const Text(
+              'Daftar Mata Kuliah',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+
+            Consumer<FavoriteNotifier>(
+              builder: (context, notifier, _) {
+                return Column(
+                  children: courses.map((course) {
+                    return buildCourseCard(
+                      context,
+                      course,
+                      isFavorite: notifier.isFavorite,
+                      onFavoriteChanged: notifier.toggle,
+                    );
+                  }).toList(),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+// =============================================================
 // CourseDetailPage
 // =============================================================
 class CourseDetailPage extends StatelessWidget {
@@ -783,7 +813,11 @@ class CourseDetailPage extends StatelessWidget {
 }
 
 // =============================================================
-// Root App
+// Root App dengan MultiProvider
+// -------------------------------------------------------------
+// Dua ChangeNotifier dipasang sekaligus:
+//  - FavoriteNotifier (Tahap 5)
+//  - CourseProvider   (Tahap 11) -> dibungkus CourseRepository
 // =============================================================
 void main() {
   runApp(const MyApp());
@@ -794,8 +828,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<FavoriteNotifier>(
-      create: (_) => FavoriteNotifier(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<FavoriteNotifier>(
+          create: (_) => FavoriteNotifier(),
+        ),
+        ChangeNotifierProvider<CourseProvider>(
+          create: (_) => CourseProvider(CourseRepository(CourseService())),
+        ),
+      ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Learning Dashboard',
