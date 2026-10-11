@@ -1,6 +1,6 @@
 // =============================================================
-// Pertemuan 6 - Tahap 9
-// Service / Data Source
+// Pertemuan 6 - Tahap 10
+// Repository Pattern
 // Nama : Komang Rossi Adi Utama
 // NIM  : 2415051106
 // =============================================================
@@ -12,6 +12,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:provider/provider.dart';
 
 import 'models/course.dart';
+import 'repositories/course_repository.dart';
 import 'services/course_service.dart';
 
 const String studentName = 'Komang Rossi Adi Utama';
@@ -220,10 +221,13 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   // ===========================================================
-  // TAHAP 9: Instance CourseService.
-  // UI sekarang tidak langsung baca rootBundle untuk courses.
+  // TAHAP 10: Repository membungkus Service.
+  // UI sekarang memanggil Repository, bukan Service langsung.
   // ===========================================================
   final CourseService courseService = CourseService();
+  late final CourseRepository courseRepository = CourseRepository(
+    courseService,
+  );
 
   late Future<Map<String, dynamic>> studentFuture;
   late Future<List<Course>> coursesFuture;
@@ -237,8 +241,8 @@ class _DashboardPageState extends State<DashboardPage> {
   void initState() {
     super.initState();
     studentFuture = loadStudentData();
-    // Courses diambil lewat service, bukan langsung rootBundle.
-    coursesFuture = courseService.loadCourses();
+    // TAHAP 10: panggil lewat Repository, bukan Service langsung.
+    coursesFuture = courseRepository.getCourses();
   }
 
   @override
@@ -306,14 +310,11 @@ class _DashboardPageState extends State<DashboardPage> {
               const SizedBox(height: 16),
 
               // =================================================
-              // TAHAP 9: FutureBuilder untuk data dari Service.
-              // Courses diambil lewat CourseService, bukan
-              // dari data['courses'] langsung.
+              // TAHAP 10: courses diambil lewat Repository.
               // =================================================
               FutureBuilder<List<Course>>(
                 future: coursesFuture,
                 builder: (context, courseSnap) {
-                  // Loading state
                   if (courseSnap.connectionState == ConnectionState.waiting) {
                     return const Card(
                       child: Padding(
@@ -323,7 +324,6 @@ class _DashboardPageState extends State<DashboardPage> {
                     );
                   }
 
-                  // Error state
                   if (courseSnap.hasError) {
                     return Card(
                       color: Colors.red.shade50,
@@ -337,7 +337,6 @@ class _DashboardPageState extends State<DashboardPage> {
                     );
                   }
 
-                  // Data state
                   final List<Course> courses = courseSnap.data ?? <Course>[];
 
                   final int totalCourses = courses.length;
@@ -376,16 +375,16 @@ class _DashboardPageState extends State<DashboardPage> {
 
                       const SizedBox(height: 16),
 
-                      // ---------- Card Service Demo ----------
+                      // ---------- Card Repository Demo ----------
                       Card(
-                        color: Colors.cyan.shade50,
+                        color: Colors.lightGreen.shade50,
                         child: Padding(
                           padding: const EdgeInsets.all(16),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const Text(
-                                'CourseService - Tahap 9',
+                                'CourseRepository - Tahap 10',
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -393,9 +392,8 @@ class _DashboardPageState extends State<DashboardPage> {
                               ),
                               const SizedBox(height: 4),
                               const Text(
-                                'Data courses diambil lewat '
-                                'CourseService, bukan langsung '
-                                'rootBundle.',
+                                'UI memanggil Repository, '
+                                'Repository memanggil Service.',
                                 style: TextStyle(color: Colors.grey),
                               ),
                               const SizedBox(height: 12),
@@ -520,7 +518,7 @@ class _DashboardPageState extends State<DashboardPage> {
               const ReadDemoCard(),
               const SizedBox(height: 16),
 
-              // ---------- TAHAP 6: Consumer ----------
+              // ---------- TAHAP 6 ----------
               Consumer<FavoriteNotifier>(
                 builder: (context, notifier, _) {
                   final bool fav = notifier.isFavorite;
