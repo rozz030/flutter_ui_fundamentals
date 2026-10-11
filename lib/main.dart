@@ -1,6 +1,6 @@
 // =============================================================
-// Pertemuan 6 - Tahap 5
-// ChangeNotifier & notifyListeners()
+// Pertemuan 6 - Tahap 6
+// Memasang Provider pada Widget Tree
 // Nama : Komang Rossi Adi Utama
 // NIM  : 2415051106
 // =============================================================
@@ -9,6 +9,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:provider/provider.dart';
 
 const String studentName = 'Komang Rossi Adi Utama';
 const String studentId = '2415051106';
@@ -65,7 +66,7 @@ class FavoriteNotifier extends ChangeNotifier {
 }
 
 // =============================================================
-// TAHAP 3: buildCourseCard - menerima isFavorite + callback.
+// TAHAP 3: buildCourseCard
 // =============================================================
 Widget buildCourseCard(
   BuildContext context,
@@ -143,9 +144,6 @@ class _DashboardPageState extends State<DashboardPage> {
   final ValueNotifier<int> favoriteCount = ValueNotifier<int>(0);
   final ValueNotifier<int> clickCounter = ValueNotifier<int>(0);
 
-  // Tahap 5: ChangeNotifier
-  final FavoriteNotifier favoriteNotifier = FavoriteNotifier();
-
   @override
   void initState() {
     super.initState();
@@ -154,9 +152,9 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   void dispose() {
+    // FavoriteNotifier TIDAK di-dispose di sini, karena dimiliki Provider.
     favoriteCount.dispose();
     clickCounter.dispose();
-    favoriteNotifier.dispose();
     super.dispose();
   }
 
@@ -309,24 +307,22 @@ class _DashboardPageState extends State<DashboardPage> {
               const SizedBox(height: 16),
 
               // =================================================
-              // TAHAP 5: AnimatedBuilder mendengarkan
-              // FavoriteNotifier. Tidak ada setState() di sini.
+              // TAHAP 6: Card Provider
               // =================================================
-              AnimatedBuilder(
-                animation: favoriteNotifier,
-                builder: (context, _) {
-                  final bool fav = favoriteNotifier.isFavorite;
-                  final int count = favoriteNotifier.toggleCount;
+              Consumer<FavoriteNotifier>(
+                builder: (context, notifier, _) {
+                  final bool fav = notifier.isFavorite;
+                  final int count = notifier.toggleCount;
 
                   return Card(
-                    color: Colors.green.shade50,
+                    color: Colors.orange.shade50,
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'ChangeNotifier - Tahap 5',
+                            'Provider - Tahap 6',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -334,8 +330,8 @@ class _DashboardPageState extends State<DashboardPage> {
                           ),
                           const SizedBox(height: 4),
                           const Text(
-                            'State + logic di dalam ChangeNotifier, '
-                            'UI hanya mendengarkan.',
+                            'ChangeNotifier disediakan lewat Provider, '
+                            'diakses via context.',
                             style: TextStyle(color: Colors.grey),
                           ),
                           const SizedBox(height: 12),
@@ -368,7 +364,7 @@ class _DashboardPageState extends State<DashboardPage> {
                               Expanded(
                                 child: FilledButton.icon(
                                   onPressed: () {
-                                    favoriteNotifier.toggle();
+                                    context.read<FavoriteNotifier>().toggle();
                                   },
                                   icon: const Icon(Icons.swap_horiz),
                                   label: const Text('Toggle Favorit'),
@@ -377,7 +373,7 @@ class _DashboardPageState extends State<DashboardPage> {
                               const SizedBox(width: 8),
                               OutlinedButton(
                                 onPressed: () {
-                                  favoriteNotifier.reset();
+                                  context.read<FavoriteNotifier>().reset();
                                 },
                                 child: const Text('Reset'),
                               ),
@@ -393,7 +389,7 @@ class _DashboardPageState extends State<DashboardPage> {
               const SizedBox(height: 16),
 
               // =================================================
-              // TAHAP 4: ValueNotifier sebagai pembanding
+              // TAHAP 4: ValueNotifier
               // =================================================
               Card(
                 color: Colors.blue.shade50,
@@ -498,7 +494,7 @@ class _DashboardPageState extends State<DashboardPage> {
               const SizedBox(height: 16),
 
               // =================================================
-              // Daftar Mata Kuliah - baca favoriteNotifier
+              // Daftar Mata Kuliah - baca dari Provider
               // =================================================
               const Text(
                 'Daftar Mata Kuliah',
@@ -506,17 +502,16 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
               const SizedBox(height: 8),
 
-              AnimatedBuilder(
-                animation: favoriteNotifier,
-                builder: (context, _) {
+              Consumer<FavoriteNotifier>(
+                builder: (context, notifier, _) {
                   return Column(
                     children: courses.map((course) {
                       final map = course as Map<String, dynamic>;
                       return buildCourseCard(
                         context,
                         map,
-                        isFavorite: favoriteNotifier.isFavorite,
-                        onFavoriteChanged: favoriteNotifier.toggle,
+                        isFavorite: notifier.isFavorite,
+                        onFavoriteChanged: notifier.toggle,
                       );
                     }).toList(),
                   );
@@ -613,7 +608,7 @@ class CourseDetailPage extends StatelessWidget {
 }
 
 // =============================================================
-// Root App
+// Root App dengan Provider
 // =============================================================
 void main() {
   runApp(const MyApp());
@@ -624,14 +619,17 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Learning Dashboard',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
+    return ChangeNotifierProvider<FavoriteNotifier>(
+      create: (_) => FavoriteNotifier(),
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Learning Dashboard',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+          useMaterial3: true,
+        ),
+        home: const DashboardPage(),
       ),
-      home: const DashboardPage(),
     );
   }
 }
