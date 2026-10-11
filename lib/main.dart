@@ -86,6 +86,10 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   late Future<Map<String, dynamic>> studentFuture;
 
+  // Local State Tahap 1.
+  // false berarti informasi tambahan disembunyikan.
+  bool showExtraInfo = false;
+
   @override
   void initState() {
     super.initState();
@@ -125,6 +129,7 @@ class _DashboardPageState extends State<DashboardPage> {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              // Profil mahasiswa.
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -156,6 +161,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
               const SizedBox(height: 16),
 
+              // Ringkasan pembelajaran.
               const Text(
                 'Ringkasan Pembelajaran',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -176,6 +182,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
               const SizedBox(height: 16),
 
+              // Identitas dan pengujian layout.
               const Row(
                 children: [
                   Icon(Icons.info),
@@ -192,6 +199,66 @@ class _DashboardPageState extends State<DashboardPage> {
 
               const SizedBox(height: 16),
 
+              // LOCAL STATE - TAHAP 1.
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Contoh Local State',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      const Text('Nama: Komang Rossi Adi Utama'),
+
+                      const Text('NIM: 2415051106'),
+
+                      const SizedBox(height: 8),
+
+                      if (showExtraInfo)
+                        const Text(
+                          'Informasi tambahan: Local State '
+                          'dikelola menggunakan setState() '
+                          'dan hanya digunakan pada Dashboard.',
+                        ),
+
+                      const SizedBox(height: 8),
+
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: () {
+                            setState(() {
+                              showExtraInfo = !showExtraInfo;
+                            });
+                          },
+                          icon: Icon(
+                            showExtraInfo
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                          ),
+                          label: Text(
+                            showExtraInfo
+                                ? 'Sembunyikan Informasi'
+                                : 'Tampilkan Informasi',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Daftar mata kuliah.
               const Text(
                 'Daftar Mata Kuliah',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -235,7 +302,9 @@ class CourseDetailPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Center(child: Icon(Icons.menu_book, size: 64)),
+
                   const SizedBox(height: 20),
+
                   Text(
                     course['title'] as String,
                     style: const TextStyle(
@@ -243,23 +312,33 @@ class CourseDetailPage extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+
                   const Divider(height: 32),
+
                   _detailRow('Kode Mata Kuliah', course['code'].toString()),
+
                   _detailRow('Jumlah SKS', '${course['credits']} SKS'),
+
                   _detailRow('Status', statusText),
+
                   const Divider(height: 32),
+
                   const Text(
                     'Identitas Mahasiswa',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
+
                   const SizedBox(height: 12),
+
                   _detailRow('Nama', studentName),
                   _detailRow('NIM', studentId),
                 ],
               ),
             ),
           ),
+
           const SizedBox(height: 16),
+
           FilledButton.icon(
             onPressed: () {
               Navigator.pop(context);
