@@ -35,7 +35,7 @@ Widget buildSummaryCard(String value, String label, IconData icon) {
   );
 }
 
-Widget buildCourseCard(Map<String, dynamic> course) {
+Widget buildCourseCard(BuildContext context, Map<String, dynamic> course) {
   final String status = course['status'] as String;
 
   final bool isDone = status == 'done';
@@ -62,7 +62,16 @@ Widget buildCourseCard(Map<String, dynamic> course) {
         style: const TextStyle(fontWeight: FontWeight.bold),
       ),
       subtitle: Text('${course['code']} • ${course['credits']} SKS'),
-      trailing: Text(statusText),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                CourseDetailPage(course: course, statusText: statusText),
+          ),
+        );
+      },
     ),
   );
 }
@@ -98,15 +107,17 @@ class _DashboardPageState extends State<DashboardPage> {
             return Center(child: Text('Gagal memuat data: ${snapshot.error}'));
           }
 
+          if (!snapshot.hasData) {
+            return const Center(child: Text('Data mahasiswa tidak tersedia.'));
+          }
+
           final data = snapshot.data!;
-
           final student = data['student'] as Map<String, dynamic>;
-
           final courses = data['courses'] as List<dynamic>;
 
           final int totalCourses = courses.length;
 
-          final int totalCredits = courses.fold(
+          final int totalCredits = courses.fold<int>(
             0,
             (sum, course) => sum + (course['credits'] as int),
           );
@@ -165,14 +176,15 @@ class _DashboardPageState extends State<DashboardPage> {
 
               const SizedBox(height: 16),
 
-              // Case A: Mengatasi teks panjang dalam Row
               const Row(
                 children: [
                   Icon(Icons.info),
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      '$studentId - $studentName - Ini adalah teks yang sangat panjang untuk menguji layout',
+                      '$studentId - $studentName - '
+                      'Ini adalah teks yang sangat panjang '
+                      'untuk menguji layout',
                     ),
                   ),
                 ],
@@ -188,11 +200,91 @@ class _DashboardPageState extends State<DashboardPage> {
               const SizedBox(height: 8),
 
               ...courses.map(
-                (course) => buildCourseCard(course as Map<String, dynamic>),
+                (course) =>
+                    buildCourseCard(context, course as Map<String, dynamic>),
               ),
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class CourseDetailPage extends StatelessWidget {
+  final Map<String, dynamic> course;
+  final String statusText;
+
+  const CourseDetailPage({
+    super.key,
+    required this.course,
+    required this.statusText,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Detail Mata Kuliah')),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Center(child: Icon(Icons.menu_book, size: 64)),
+                  const SizedBox(height: 20),
+                  Text(
+                    course['title'] as String,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Divider(height: 32),
+                  _detailRow('Kode Mata Kuliah', course['code'].toString()),
+                  _detailRow('Jumlah SKS', '${course['credits']} SKS'),
+                  _detailRow('Status', statusText),
+                  const Divider(height: 32),
+                  const Text(
+                    'Identitas Mahasiswa',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  _detailRow('Nama', studentName),
+                  _detailRow('NIM', studentId),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            icon: const Icon(Icons.arrow_back),
+            label: const Text('Kembali ke Dashboard'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _detailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          ),
+        ],
       ),
     );
   }
@@ -209,6 +301,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      title: 'Learning Dashboard',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        useMaterial3: true,
+      ),
       home: const DashboardPage(),
     );
   }
