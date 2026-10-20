@@ -5,6 +5,8 @@ import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../providers/favorite_notifier.dart';
 import 'course_card.dart';
+import 'debug_panel_card.dart';
+import 'error_view.dart';
 import 'summary_card.dart';
 
 class CourseAsyncSection extends StatelessWidget {
@@ -15,6 +17,10 @@ class CourseAsyncSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const DebugPanelCard(),
+
+        const SizedBox(height: 16),
+
         Consumer<CourseProvider>(
           builder: (context, provider, _) {
             // -------- 1. LOADING --------
@@ -35,34 +41,11 @@ class CourseAsyncSection extends StatelessWidget {
 
             // -------- 2. ERROR --------
             if (provider.error != null) {
-              return Card(
-                color: Colors.red.shade50,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Terjadi kesalahan',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.red,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(provider.error!),
-                      const SizedBox(height: 12),
-                      FilledButton.icon(
-                        onPressed: () {
-                          context.read<CourseProvider>().loadCourses();
-                        },
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Coba lagi'),
-                      ),
-                    ],
-                  ),
-                ),
+              return ErrorView(
+                message: provider.error!,
+                onRetry: () {
+                  context.read<CourseProvider>().loadCourses();
+                },
               );
             }
 
@@ -83,6 +66,7 @@ class CourseAsyncSection extends StatelessWidget {
                   'Ringkasan Pembelajaran',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
+
                 const SizedBox(height: 8),
 
                 Row(
@@ -103,30 +87,41 @@ class CourseAsyncSection extends StatelessWidget {
                 const SizedBox(height: 16),
 
                 Card(
+                  color: Colors.amber.shade50,
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'Data Course dari REST API',
+                          'CourseProvider',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
+
                         const SizedBox(height: 4),
+
                         const Text(
-                          'Data berhasil diambil dan diproses '
-                          'dari endpoint REST API.',
+                          'Loading / Error / Success dikelola '
+                          'di satu tempat.',
                           style: TextStyle(color: Colors.grey),
                         ),
+
                         const SizedBox(height: 12),
+
                         Text('Jumlah course: ${courses.length}'),
+
                         const SizedBox(height: 4),
-                        Text('Status: Data berhasil dimuat'),
+
+                        Text('isLoading: ${provider.isLoading}'),
+
+                        Text('error: ${provider.error ?? "tidak ada"}'),
+
                         if (courses.isNotEmpty) ...[
                           const SizedBox(height: 8),
+
                           Text(
                             'Contoh: '
                             '${courses.first.code} - '
@@ -146,6 +141,7 @@ class CourseAsyncSection extends StatelessWidget {
                   'Daftar Mata Kuliah',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
+
                 const SizedBox(height: 8),
 
                 Consumer<FavoriteNotifier>(
