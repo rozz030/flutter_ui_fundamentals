@@ -1,6 +1,6 @@
 // =============================================================
-// Pertemuan 6 - Tahap 8
-// Model Course
+// Pertemuan 7 - Tahap 2
+// Model Course - REST API
 // Nama : Komang Rossi Adi Utama
 // NIM  : 2415051106
 // =============================================================
@@ -20,10 +20,10 @@ class Course {
 
   factory Course.fromJson(Map<String, dynamic> json) {
     return Course(
-      code: json['code'] as String,
+      code: 'COURSE-${json['id']}',
       title: json['title'] as String,
-      credits: json['credits'] as int,
-      status: json['status'] as String,
+      credits: (json['userId'] as num).toInt(),
+      status: 'active',
     );
   }
 
@@ -39,5 +39,6 @@ class Course {
   }
 
   bool get isDone => status == 'done';
+
   bool get isActive => status == 'active';
 }

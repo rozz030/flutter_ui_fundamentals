@@ -1,26 +1,31 @@
 // =============================================================
-// Pertemuan 6 - Tahap 9
-// Service / Data Source
+// Pertemuan 7 - Tahap 2
+// Service / REST API Data Source
 // Nama : Komang Rossi Adi Utama
 // NIM  : 2415051106
 // =============================================================
 
 import 'dart:convert';
 
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:http/http.dart' as http;
 
 import '../models/course.dart';
 
 class CourseService {
-  // Membaca JSON asset dan mengembalikan List<Course>.
+  static const String apiUrl = 'https://jsonplaceholder.typicode.com/posts';
+
+  // Mengambil data courses dari REST API menggunakan HTTP GET.
   Future<List<Course>> loadCourses() async {
-    final jsonString = await rootBundle.loadString(
-      'assets/data/student_data.json',
-    );
+    final response = await http.get(Uri.parse(apiUrl));
 
-    final data = jsonDecode(jsonString) as Map<String, dynamic>;
-    final list = data['courses'] as List<dynamic>;
+    if (response.statusCode != 200) {
+      throw Exception(
+        'Gagal mengambil data. Status code: ${response.statusCode}',
+      );
+    }
 
-    return list.map((e) => Course.fromJson(e as Map<String, dynamic>)).toList();
+    final data = jsonDecode(response.body) as List<dynamic>;
+
+    return data.map((e) => Course.fromJson(e as Map<String, dynamic>)).toList();
   }
 }

@@ -1,8 +1,3 @@
-// =============================================================
-// Pertemuan 6 - Tahap 15
-// Widget CourseAsyncSection + Debug Panel
-// =============================================================
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -10,7 +5,6 @@ import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../providers/favorite_notifier.dart';
 import 'course_card.dart';
-import 'debug_panel_card.dart';
 import 'summary_card.dart';
 
 class CourseAsyncSection extends StatelessWidget {
@@ -21,12 +15,6 @@ class CourseAsyncSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ---------- Debug Panel (Tahap 15) ----------
-        const DebugPanelCard(),
-
-        const SizedBox(height: 16),
-
-        // ---------- Async Data (Tahap 11) ----------
         Consumer<CourseProvider>(
           builder: (context, provider, _) {
             // -------- 1. LOADING --------
@@ -96,6 +84,7 @@ class CourseAsyncSection extends StatelessWidget {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
+
                 Row(
                   children: [
                     buildSummaryCard(
@@ -114,14 +103,13 @@ class CourseAsyncSection extends StatelessWidget {
                 const SizedBox(height: 16),
 
                 Card(
-                  color: Colors.amber.shade50,
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'CourseProvider - Tahap 11',
+                          'Data Course dari REST API',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -129,15 +117,14 @@ class CourseAsyncSection extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         const Text(
-                          'Loading / Error / Success dikelola '
-                          'di satu tempat.',
+                          'Data berhasil diambil dan diproses '
+                          'dari endpoint REST API.',
                           style: TextStyle(color: Colors.grey),
                         ),
                         const SizedBox(height: 12),
                         Text('Jumlah course: ${courses.length}'),
                         const SizedBox(height: 4),
-                        Text('isLoading: ${provider.isLoading}'),
-                        Text('error: ${provider.error ?? "tidak ada"}'),
+                        Text('Status: Data berhasil dimuat'),
                         if (courses.isNotEmpty) ...[
                           const SizedBox(height: 8),
                           Text(
