@@ -105,4 +105,34 @@ class CourseProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  // =============================================================
+  // DELETE - DELETE COURSE
+  // =============================================================
+  Future<void> deleteCourse(int id, String courseCode) async {
+    if (isSaving) {
+      return;
+    }
+
+    isSaving = true;
+    error = null;
+    notifyListeners();
+
+    try {
+      await repository.deleteCourse(id);
+
+      // Hapus course dari list lokal agar perubahan
+      // langsung terlihat pada halaman Courses.
+      courses.removeWhere((course) => course.code == courseCode);
+
+      notifyListeners();
+    } catch (e) {
+      error = e.toString();
+      notifyListeners();
+      rethrow;
+    } finally {
+      isSaving = false;
+      notifyListeners();
+    }
+  }
 }

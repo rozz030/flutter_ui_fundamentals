@@ -1,5 +1,5 @@
 // =============================================================
-// Pertemuan 7 - Tahap 7
+// Pertemuan 7 - Tahap 8
 // Screen: CoursesPage
 // =============================================================
 
@@ -39,8 +39,9 @@ class CoursesPage extends StatelessWidget {
                     Text(provider.error!, textAlign: TextAlign.center),
                     const SizedBox(height: 12),
                     FilledButton.icon(
-                      onPressed: () =>
-                          context.read<CourseProvider>().loadCourses(),
+                      onPressed: () {
+                        context.read<CourseProvider>().loadCourses();
+                      },
                       icon: const Icon(Icons.refresh),
                       label: const Text('Coba lagi'),
                     ),
@@ -71,9 +72,11 @@ class CoursesPage extends StatelessWidget {
                         context,
                         course,
                         isFavorite: favNotifier.isFavorite(course.code),
-                        onFavoriteChanged: () =>
-                            favNotifier.toggle(course.code),
+                        onFavoriteChanged: () {
+                          favNotifier.toggle(course.code);
+                        },
                       ),
+
                       const SizedBox(height: 8),
 
                       // -------- TOMBOL EDIT --------
@@ -95,7 +98,90 @@ class CoursesPage extends StatelessWidget {
                           label: const Text('Edit'),
                         ),
                       ),
+
                       const SizedBox(height: 8),
+
+                      // -------- TOMBOL DELETE --------
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: OutlinedButton.icon(
+                          onPressed: () async {
+                            final bool? confirmed = await showDialog<bool>(
+                              context: context,
+                              builder: (dialogContext) {
+                                return AlertDialog(
+                                  title: const Text('Hapus Course?'),
+                                  content: Text(
+                                    'Apakah kamu yakin ingin '
+                                    'menghapus "${course.title}"?',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.pop(dialogContext, false);
+                                      },
+                                      child: const Text('Batal'),
+                                    ),
+                                    FilledButton(
+                                      onPressed: () {
+                                        Navigator.pop(dialogContext, true);
+                                      },
+                                      child: const Text('Hapus'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+
+                            if (confirmed != true) {
+                              return;
+                            }
+
+                            try {
+                              await context.read<CourseProvider>().deleteCourse(
+                                index + 1,
+                                course.code,
+                              );
+
+                              // Pastikan context masih terpasang
+                              // setelah proses async selesai.
+                              if (!context.mounted) {
+                                return;
+                              }
+
+                              // Jika course dihapus, hapus juga
+                              // dari daftar Favorites.
+                              if (favNotifier.isFavorite(course.code)) {
+                                favNotifier.toggle(course.code);
+                              }
+
+                              ScaffoldMessenger.of(context)
+                                ..hideCurrentSnackBar()
+                                ..showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Course berhasil dihapus.'),
+                                  ),
+                                );
+                            } catch (e) {
+                              if (!context.mounted) {
+                                return;
+                              }
+
+                              ScaffoldMessenger.of(context)
+                                ..hideCurrentSnackBar()
+                                ..showSnackBar(
+                                  SnackBar(
+                                    content: Text('Gagal menghapus course: $e'),
+                                  ),
+                                );
+                            }
+                          },
+                          icon: const Icon(Icons.delete),
+                          label: const Text('Delete'),
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
                     ],
                   );
                 },
