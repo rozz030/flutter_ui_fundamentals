@@ -1,8 +1,3 @@
-// =============================================================
-// Pertemuan 6 - Tahap 14
-// MainShell: Bottom Navigation (Home, Courses, Favorites)
-// =============================================================
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -31,8 +26,35 @@ class _MainShellState extends State<MainShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // IndexedStack menjaga state tiap tab tetap hidup.
-      body: IndexedStack(index: _currentIndex, children: _pages),
+      // Tambahkan SafeArea dan Column agar Header Identitas tidak tertutup status bar
+      body: SafeArea(
+        child: Column(
+          children: [
+            // === HEADER IDENTITAS MAHASISWA (Tahap 0) ===
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(
+                vertical: 8.0,
+                horizontal: 16.0,
+              ),
+              color: Theme.of(context)
+                  .colorScheme
+                  .primaryContainer, // Warna menyesuaikan tema
+              child: const Text(
+                'Komang Rossi Adi Utama • 2415051106',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+            ),
+            // ==============================================
+
+            // IndexedStack menjaga state tiap tab tetap hidup.
+            Expanded(
+              child: IndexedStack(index: _currentIndex, children: _pages),
+            ),
+          ],
+        ),
+      ),
       bottomNavigationBar: Consumer<FavoriteNotifier>(
         builder: (context, favNotifier, _) {
           final int favCount = favNotifier.count;
