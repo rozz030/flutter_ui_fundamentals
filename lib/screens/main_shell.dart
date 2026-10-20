@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/favorite_notifier.dart';
+import 'add_course_page.dart';
 import 'courses_page.dart';
 import 'dashboard_page.dart';
 import 'favorites_page.dart';
@@ -23,38 +24,48 @@ class _MainShellState extends State<MainShell> {
     FavoritesPage(),
   ];
 
+  void _openAddCoursePage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const AddCoursePage()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Tambahkan SafeArea dan Column agar Header Identitas tidak tertutup status bar
       body: SafeArea(
         child: Column(
           children: [
-            // === HEADER IDENTITAS MAHASISWA (Tahap 0) ===
+            // === HEADER IDENTITAS MAHASISWA ===
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(
                 vertical: 8.0,
                 horizontal: 16.0,
               ),
-              color: Theme.of(context)
-                  .colorScheme
-                  .primaryContainer, // Warna menyesuaikan tema
+              color: Theme.of(context).colorScheme.primaryContainer,
               child: const Text(
                 'Komang Rossi Adi Utama • 2415051106',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
             ),
-            // ==============================================
 
-            // IndexedStack menjaga state tiap tab tetap hidup.
             Expanded(
               child: IndexedStack(index: _currentIndex, children: _pages),
             ),
           ],
         ),
       ),
+
+      // Tombol tambah course.
+      floatingActionButton: FloatingActionButton(
+        onPressed: _openAddCoursePage,
+        tooltip: 'Tambah Course',
+        child: const Icon(Icons.add),
+      ),
+
       bottomNavigationBar: Consumer<FavoriteNotifier>(
         builder: (context, favNotifier, _) {
           final int favCount = favNotifier.count;
