@@ -1,3 +1,10 @@
+// =============================================================
+// Pertemuan 7 - Tahap 9
+// Main Shell
+// Nama : Komang Rossi Adi Utama
+// NIM  : 2415051106
+// =============================================================
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -17,18 +24,21 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
 
-  // Halaman yang ditampilkan sesuai tab.
-  static const List<Widget> _pages = [
+  final List<Widget> _pages = const [
     DashboardPage(),
     CoursesPage(),
     FavoritesPage(),
   ];
 
-  void _openAddCoursePage() {
-    Navigator.push(
+  Future<void> _openAddCoursePage() async {
+    await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const AddCoursePage()),
     );
+
+    // Tidak perlu loadCourses() di sini.
+    // Course baru sudah ditambahkan langsung
+    // ke state CourseProvider melalui createCourse().
   }
 
   @override
@@ -37,7 +47,9 @@ class _MainShellState extends State<MainShell> {
       body: SafeArea(
         child: Column(
           children: [
-            // === HEADER IDENTITAS MAHASISWA ===
+            // =====================================================
+            // HEADER IDENTITAS MAHASISWA
+            // =====================================================
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(
@@ -52,6 +64,9 @@ class _MainShellState extends State<MainShell> {
               ),
             ),
 
+            // =====================================================
+            // CONTENT
+            // =====================================================
             Expanded(
               child: IndexedStack(index: _currentIndex, children: _pages),
             ),
@@ -59,13 +74,18 @@ class _MainShellState extends State<MainShell> {
         ),
       ),
 
-      // Tombol tambah course.
+      // ===========================================================
+      // TOMBOL TAMBAH COURSE
+      // ===========================================================
       floatingActionButton: FloatingActionButton(
         onPressed: _openAddCoursePage,
         tooltip: 'Tambah Course',
         child: const Icon(Icons.add),
       ),
 
+      // ===========================================================
+      // BOTTOM NAVIGATION
+      // ===========================================================
       bottomNavigationBar: Consumer<FavoriteNotifier>(
         builder: (context, favNotifier, _) {
           final int favCount = favNotifier.count;

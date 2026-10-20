@@ -58,10 +58,15 @@ class CourseProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      // Kirim data course ke API melalui repository.
       await repository.createCourse(course);
 
-      // Refresh data setelah POST berhasil.
-      await loadCourses();
+      // JSONPlaceholder tidak menyimpan data POST secara permanen.
+      // Oleh karena itu, tambahkan course ke state lokal agar
+      // course baru langsung terlihat pada halaman Courses.
+      courses.add(course);
+
+      notifyListeners();
     } catch (e) {
       error = e.toString();
       notifyListeners();

@@ -1,43 +1,43 @@
 // =============================================================
-// Pertemuan 7 - Repository Pattern
+// Pertemuan 7 - Tahap 9
 // Repository: Course
 // Nama : Komang Rossi Adi Utama
 // NIM  : 2415051106
 // =============================================================
 
 import '../models/course.dart';
-import '../services/course_api_service.dart';
+import '../services/course_data_source.dart';
 
 class CourseRepository {
-  CourseRepository(this.service);
+  CourseRepository(this.dataSource);
 
-  final CourseApiService service;
+  final CourseDataSource dataSource;
 
   // =============================================================
   // GET
   // =============================================================
   Future<List<Course>> getCourses() {
-    return service.getCourses();
+    return dataSource.getCourses();
   }
 
   // =============================================================
   // POST
   // =============================================================
   Future<Course> createCourse(Course course) {
-    return service.createCourse(course);
+    return dataSource.createCourse(course);
   }
 
   // =============================================================
   // PUT
   // =============================================================
   Future<void> updateCourse(int id, Course course) {
-    return service.updateCourse(id, course);
+    return dataSource.updateCourse(id, course);
   }
 
   // =============================================================
   // DELETE
   // =============================================================
   Future<void> deleteCourse(int id) {
-    return service.deleteCourse(id);
+    return dataSource.deleteCourse(id);
   }
 }

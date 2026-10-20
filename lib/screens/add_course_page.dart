@@ -1,6 +1,6 @@
 // =============================================================
-// Pertemuan 6 - Tahap 6
-// Add Course Page
+// Pertemuan 7 - Tahap 9
+// Screen: Add Course Page
 // Nama : Komang Rossi Adi Utama
 // NIM  : 2415051106
 // =============================================================
@@ -49,23 +49,28 @@ class _AddCoursePageState extends State<AddCoursePage> {
 
     final provider = context.read<CourseProvider>();
 
-    await provider.createCourse(course);
+    try {
+      await provider.createCourse(course);
 
-    if (!mounted) {
-      return;
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Course berhasil ditambahkan.')),
+      );
+
+      // Kembali ke halaman Courses setelah POST berhasil.
+      Navigator.pop(context, true);
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Gagal menambahkan course: $e')));
     }
-
-    if (provider.error != null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(provider.error!)));
-      return;
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Course berhasil ditambahkan.')),
-    );
-
-    Navigator.pop(context);
   }
 
   @override
@@ -95,6 +100,9 @@ class _AddCoursePageState extends State<AddCoursePage> {
 
                   const SizedBox(height: 24),
 
+                  // =================================================
+                  // KODE COURSE
+                  // =================================================
                   TextFormField(
                     controller: _codeController,
                     textCapitalization: TextCapitalization.characters,
@@ -108,12 +116,16 @@ class _AddCoursePageState extends State<AddCoursePage> {
                       if (value == null || value.trim().isEmpty) {
                         return 'Kode course wajib diisi';
                       }
+
                       return null;
                     },
                   ),
 
                   const SizedBox(height: 16),
 
+                  // =================================================
+                  // JUDUL COURSE
+                  // =================================================
                   TextFormField(
                     controller: _titleController,
                     decoration: const InputDecoration(
@@ -126,12 +138,16 @@ class _AddCoursePageState extends State<AddCoursePage> {
                       if (value == null || value.trim().isEmpty) {
                         return 'Judul course wajib diisi';
                       }
+
                       return null;
                     },
                   ),
 
                   const SizedBox(height: 16),
 
+                  // =================================================
+                  // SKS
+                  // =================================================
                   TextFormField(
                     controller: _creditsController,
                     keyboardType: TextInputType.number,
@@ -162,6 +178,9 @@ class _AddCoursePageState extends State<AddCoursePage> {
 
                   const SizedBox(height: 16),
 
+                  // =================================================
+                  // STATUS
+                  // =================================================
                   DropdownButtonFormField<String>(
                     initialValue: _selectedStatus,
                     decoration: const InputDecoration(
@@ -190,6 +209,9 @@ class _AddCoursePageState extends State<AddCoursePage> {
 
                   const SizedBox(height: 24),
 
+                  // =================================================
+                  // TOMBOL SIMPAN
+                  // =================================================
                   FilledButton.icon(
                     onPressed: provider.isSaving ? null : _saveCourse,
                     icon: provider.isSaving

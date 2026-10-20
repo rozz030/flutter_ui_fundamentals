@@ -1,10 +1,18 @@
+// =============================================================
+// Pertemuan 7 - Tahap 9
+// Service: Course API Service
+// Nama : Komang Rossi Adi Utama
+// NIM  : 2415051106
+// =============================================================
+
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
 import '../models/course.dart';
+import 'course_data_source.dart';
 
-class CourseApiService {
+class CourseApiService implements CourseDataSource {
   CourseApiService(this.baseUrl);
 
   final String baseUrl;
@@ -12,6 +20,7 @@ class CourseApiService {
   // =============================================================
   // HTTP GET
   // =============================================================
+  @override
   Future<List<Course>> getCourses() async {
     final response = await http.get(Uri.parse('$baseUrl/posts'));
 
@@ -30,6 +39,7 @@ class CourseApiService {
   // =============================================================
   // HTTP POST
   // =============================================================
+  @override
   Future<Course> createCourse(Course course) async {
     final response = await http.post(
       Uri.parse('$baseUrl/posts'),
@@ -65,6 +75,7 @@ class CourseApiService {
   // HTTP PUT
   // Memperbarui data course berdasarkan id.
   // =============================================================
+  @override
   Future<void> updateCourse(int id, Course course) async {
     final response = await http.put(
       Uri.parse('$baseUrl/posts/$id'),
@@ -84,6 +95,7 @@ class CourseApiService {
   // HTTP DELETE
   // Menghapus course berdasarkan id.
   // =============================================================
+  @override
   Future<void> deleteCourse(int id) async {
     final response = await http.delete(Uri.parse('$baseUrl/posts/$id'));
 

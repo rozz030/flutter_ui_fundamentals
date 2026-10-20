@@ -1,6 +1,8 @@
 // =============================================================
 // Pertemuan 7 - Tahap 8
 // Screen: CoursesPage
+// Nama : Komang Rossi Adi Utama
+// NIM  : 2415051106
 // =============================================================
 
 import 'package:flutter/material.dart';
@@ -106,6 +108,17 @@ class CoursesPage extends StatelessWidget {
                         alignment: Alignment.centerRight,
                         child: OutlinedButton.icon(
                           onPressed: () async {
+                            // Ambil semua dependency yang menggunakan
+                            // BuildContext SEBELUM async gap.
+                            final courseProvider = context
+                                .read<CourseProvider>();
+
+                            final messenger = ScaffoldMessenger.of(context);
+
+                            final bool wasFavorite = favNotifier.isFavorite(
+                              course.code,
+                            );
+
                             final bool? confirmed = await showDialog<bool>(
                               context: context,
                               builder: (dialogContext) {
@@ -138,24 +151,18 @@ class CoursesPage extends StatelessWidget {
                             }
 
                             try {
-                              await context.read<CourseProvider>().deleteCourse(
+                              await courseProvider.deleteCourse(
                                 index + 1,
                                 course.code,
                               );
 
-                              // Pastikan context masih terpasang
-                              // setelah proses async selesai.
-                              if (!context.mounted) {
-                                return;
-                              }
-
                               // Jika course dihapus, hapus juga
                               // dari daftar Favorites.
-                              if (favNotifier.isFavorite(course.code)) {
+                              if (wasFavorite) {
                                 favNotifier.toggle(course.code);
                               }
 
-                              ScaffoldMessenger.of(context)
+                              messenger
                                 ..hideCurrentSnackBar()
                                 ..showSnackBar(
                                   const SnackBar(
@@ -163,11 +170,7 @@ class CoursesPage extends StatelessWidget {
                                   ),
                                 );
                             } catch (e) {
-                              if (!context.mounted) {
-                                return;
-                              }
-
-                              ScaffoldMessenger.of(context)
+                              messenger
                                 ..hideCurrentSnackBar()
                                 ..showSnackBar(
                                   SnackBar(
