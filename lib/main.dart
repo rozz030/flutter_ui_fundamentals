@@ -5,7 +5,7 @@ import 'providers/course_provider.dart';
 import 'providers/favorite_notifier.dart';
 import 'repositories/course_repository.dart';
 import 'screens/main_shell.dart';
-import 'services/course_service.dart';
+import 'services/course_api_service.dart';
 
 // Variabel Identitas (Wajib untuk bukti praktikum)
 const String studentName = 'Komang Rossi Adi Utama';
@@ -26,7 +26,11 @@ class MyApp extends StatelessWidget {
           create: (_) => FavoriteNotifier(),
         ),
         ChangeNotifierProvider<CourseProvider>(
-          create: (_) => CourseProvider(CourseRepository(CourseService())),
+          create: (_) => CourseProvider(
+            CourseRepository(
+              CourseApiService('https://jsonplaceholder.typicode.com'),
+            ),
+          ),
         ),
       ],
       child: MaterialApp(
