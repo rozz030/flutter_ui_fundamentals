@@ -16,6 +16,28 @@ Arah dependency (dari luar ke dalam):
 
 ---
 
+## Endpoint REST yang Digunakan
+
+Endpoint yang digunakan pada Tahap 1:
+
+- **URL:** https://jsonplaceholder.typicode.com/posts
+- **HTTP Method:** GET
+- **Status Code:** 200 OK
+- **Resource:** posts
+
+### Field JSON
+
+Response JSON dari endpoint memiliki beberapa field, di antaranya:
+
+- `userId`
+- `id`
+- `title`
+- `body`
+
+Endpoint tersebut digunakan sebagai API latihan/dummy untuk membaca data JSON pada tahap awal pengembangan aplikasi.
+
+---
+
 ## Struktur Folder & Tanggung Jawab
 
 | Folder | Tanggung Jawab |
@@ -58,3 +80,5 @@ Arah dependency (dari luar ke dalam):
 - [x] Arah dependency: Screen → Provider → Repository → Service → JSON.
 - [x] Folder dipisah berdasarkan tanggung jawab.
 - [x] Nama dan NIM tampil di UI dan di setiap file.
+- [x] Endpoint REST latihan berhasil diakses menggunakan HTTP method GET.
+- [x] Response JSON berhasil dibaca dan memiliki field `userId`, `id`, `title`, dan `body`.
