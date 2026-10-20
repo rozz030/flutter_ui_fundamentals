@@ -1,6 +1,6 @@
 // =============================================================
-// Pertemuan 6 - Tahap 6
-// Course Provider
+// Pertemuan 7 - State Management
+// Provider: Course
 // Nama : Komang Rossi Adi Utama
 // NIM  : 2415051106
 // =============================================================
@@ -11,19 +11,24 @@ import '../models/course.dart';
 import '../repositories/course_repository.dart';
 
 class CourseProvider extends ChangeNotifier {
-  final CourseRepository repository;
-
   CourseProvider(this.repository);
 
-  // State utama
-  List<Course> courses = [];
-  bool isLoading = false;
-  String? error;
+  final CourseRepository repository;
 
-  // State saat menyimpan course baru
+  // =============================================================
+  // STATE UTAMA
+  // =============================================================
+  List<Course> courses = [];
+
+  bool isLoading = false;
+
   bool isSaving = false;
 
-  // Mengambil data courses melalui Repository.
+  String? error;
+
+  // =============================================================
+  // GET COURSES
+  // =============================================================
   Future<void> loadCourses() async {
     isLoading = true;
     error = null;
@@ -40,8 +45,14 @@ class CourseProvider extends ChangeNotifier {
     }
   }
 
-  // Membuat course baru melalui Repository.
+  // =============================================================
+  // POST - CREATE COURSE
+  // =============================================================
   Future<void> createCourse(Course course) async {
+    if (isSaving) {
+      return;
+    }
+
     isSaving = true;
     error = null;
     notifyListeners();
@@ -49,10 +60,46 @@ class CourseProvider extends ChangeNotifier {
     try {
       await repository.createCourse(course);
 
-      // Refresh data setelah berhasil membuat course.
+      // Refresh data setelah POST berhasil.
       await loadCourses();
     } catch (e) {
       error = e.toString();
+      notifyListeners();
+      rethrow;
+    } finally {
+      isSaving = false;
+      notifyListeners();
+    }
+  }
+
+  // =============================================================
+  // PUT - UPDATE COURSE
+  // =============================================================
+  Future<void> updateCourse(int id, Course course) async {
+    if (isSaving) {
+      return;
+    }
+
+    isSaving = true;
+    error = null;
+    notifyListeners();
+
+    try {
+      await repository.updateCourse(id, course);
+
+      // Update data lokal agar perubahan langsung terlihat
+      // pada daftar course.
+      final int index = courses.indexWhere((item) => item.code == course.code);
+
+      if (index != -1) {
+        courses[index] = course;
+      }
+
+      notifyListeners();
+    } catch (e) {
+      error = e.toString();
+      notifyListeners();
+      rethrow;
     } finally {
       isSaving = false;
       notifyListeners();

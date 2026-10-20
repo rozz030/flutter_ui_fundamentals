@@ -1,6 +1,6 @@
 // =============================================================
-// Pertemuan 6 - Tahap 10
-// Repository Pattern
+// Pertemuan 7 - Repository Pattern
+// Repository: Course
 // Nama : Komang Rossi Adi Utama
 // NIM  : 2415051106
 // =============================================================
@@ -13,12 +13,24 @@ class CourseRepository {
 
   final CourseApiService service;
 
+  // =============================================================
+  // GET
+  // =============================================================
   Future<List<Course>> getCourses() {
     return service.getCourses();
   }
 
-  // Membuat course baru melalui API Service.
+  // =============================================================
+  // POST
+  // =============================================================
   Future<Course> createCourse(Course course) {
     return service.createCourse(course);
+  }
+
+  // =============================================================
+  // PUT
+  // =============================================================
+  Future<void> updateCourse(int id, Course course) {
+    return service.updateCourse(id, course);
   }
 }

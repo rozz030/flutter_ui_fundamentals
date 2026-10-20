@@ -45,7 +45,7 @@ class CourseApiService {
           jsonDecode(response.body) as Map<String, dynamic>;
 
       // JSONPlaceholder mengembalikan id, title, dan body.
-      // Kita pertahankan data Course yang dikirim sebagai
+      // Data Course yang dikirim tetap dipertahankan sebagai
       // representasi hasil POST.
       return Course(
         code: course.code,
@@ -59,5 +59,24 @@ class CourseApiService {
       'Gagal membuat course. '
       'Status code: ${response.statusCode}',
     );
+  }
+
+  // =============================================================
+  // HTTP PUT
+  // Memperbarui data course berdasarkan id.
+  // =============================================================
+  Future<void> updateCourse(int id, Course course) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/posts/$id'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(course.toJson()),
+    );
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+        'Gagal memperbarui course. '
+        'Status code: ${response.statusCode}',
+      );
+    }
   }
 }

@@ -1,6 +1,6 @@
 // =============================================================
-// Pertemuan 6 - Tahap 14
-// Screen: CoursesPage (daftar semua mata kuliah)
+// Pertemuan 7 - Tahap 7
+// Screen: CoursesPage
 // =============================================================
 
 import 'package:flutter/material.dart';
@@ -10,6 +10,7 @@ import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../providers/favorite_notifier.dart';
 import '../widgets/course_card.dart';
+import 'edit_course_page.dart';
 
 class CoursesPage extends StatelessWidget {
   const CoursesPage({super.key});
@@ -63,11 +64,39 @@ class CoursesPage extends StatelessWidget {
                 itemCount: courses.length,
                 itemBuilder: (context, index) {
                   final Course course = courses[index];
-                  return buildCourseCard(
-                    context,
-                    course,
-                    isFavorite: favNotifier.isFavorite(course.code),
-                    onFavoriteChanged: () => favNotifier.toggle(course.code),
+
+                  return Column(
+                    children: [
+                      buildCourseCard(
+                        context,
+                        course,
+                        isFavorite: favNotifier.isFavorite(course.code),
+                        onFavoriteChanged: () =>
+                            favNotifier.toggle(course.code),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // -------- TOMBOL EDIT --------
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => EditCoursePage(
+                                  course: course,
+                                  courseId: index + 1,
+                                ),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.edit),
+                          label: const Text('Edit'),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
                   );
                 },
               );
