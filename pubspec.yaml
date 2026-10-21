@@ -37,6 +37,7 @@ dependencies:
   # Tahap 6: Provider untuk state management.
   provider: ^6.1.2
   http: ^1.6.0
+  supabase_flutter: ^2.18.3
 
 dev_dependencies:
   flutter_test:

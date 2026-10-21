@@ -1,13 +1,15 @@
 // =============================================================
-// Pertemuan 7 - Tahap 9
-// Main: Service → Repository → Provider
+// Pertemuan 7 - Tahap 10
+// Main: Supabase Client + Service → Repository → Provider
 // Nama : Komang Rossi Adi Utama
 // NIM  : 2415051106
 // =============================================================
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'config/supabase_config.dart';
 import 'providers/course_provider.dart';
 import 'providers/favorite_notifier.dart';
 import 'repositories/course_repository.dart';
@@ -22,11 +24,23 @@ const String studentId = '2415051106';
 
 // =============================================================
 // BASE URL API
-// Tanpa /courses sesuai instruksi Tahap 9.
 // =============================================================
 const String apiBaseUrl = 'https://jsonplaceholder.typicode.com';
 
-void main() {
+// =============================================================
+// MAIN
+// =============================================================
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // =============================================================
+  // INISIALISASI SUPABASE
+  // =============================================================
+  await Supabase.initialize(
+    url: SupabaseConfig.url,
+    publishableKey: SupabaseConfig.anonKey,
+  );
+
   // =============================================================
   // SERVICE → REPOSITORY
   // =============================================================
