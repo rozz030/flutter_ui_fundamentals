@@ -46,7 +46,7 @@ class CourseProvider extends ChangeNotifier {
   }
 
   // =============================================================
-  // POST - CREATE COURSE
+  // INSERT - CREATE COURSE
   // =============================================================
   Future<void> createCourse(Course course) async {
     if (isSaving) {
@@ -58,15 +58,12 @@ class CourseProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Kirim data course ke API melalui repository.
+      // Kirim data course ke Supabase melalui repository.
       await repository.createCourse(course);
 
-      // JSONPlaceholder tidak menyimpan data POST secara permanen.
-      // Oleh karena itu, tambahkan course ke state lokal agar
-      // course baru langsung terlihat pada halaman Courses.
-      courses.add(course);
-
-      notifyListeners();
+      // Refresh list dari database agar data yang tampil
+      // benar-benar sesuai dengan data di Supabase.
+      await loadCourses();
     } catch (e) {
       error = e.toString();
       notifyListeners();
@@ -78,7 +75,7 @@ class CourseProvider extends ChangeNotifier {
   }
 
   // =============================================================
-  // PUT - UPDATE COURSE
+  // UPDATE COURSE
   // =============================================================
   Future<void> updateCourse(int id, Course course) async {
     if (isSaving) {
@@ -112,7 +109,7 @@ class CourseProvider extends ChangeNotifier {
   }
 
   // =============================================================
-  // DELETE - DELETE COURSE
+  // DELETE COURSE
   // =============================================================
   Future<void> deleteCourse(int id, String courseCode) async {
     if (isSaving) {
