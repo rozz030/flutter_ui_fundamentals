@@ -1,5 +1,5 @@
 // =============================================================
-// Pertemuan 7 - Tahap 10
+// Pertemuan 7 - Tahap 12
 // Main: Supabase Client + Service → Repository → Provider
 // Nama : Komang Rossi Adi Utama
 // NIM  : 2415051106
@@ -14,7 +14,7 @@ import 'providers/course_provider.dart';
 import 'providers/favorite_notifier.dart';
 import 'repositories/course_repository.dart';
 import 'screens/main_shell.dart';
-import 'services/course_api_service.dart';
+import 'services/course_supabase_service.dart';
 
 // =============================================================
 // IDENTITAS MAHASISWA
@@ -44,7 +44,7 @@ Future<void> main() async {
   // =============================================================
   // SERVICE → REPOSITORY
   // =============================================================
-  final repository = CourseRepository(CourseApiService(apiBaseUrl));
+  final repository = CourseRepository(CourseSupabaseService());
 
   // =============================================================
   // REPOSITORY → PROVIDER
