@@ -82,3 +82,9 @@ Endpoint tersebut digunakan sebagai API latihan/dummy untuk membaca data JSON pa
 - [x] Nama dan NIM tampil di UI dan di setiap file.
 - [x] Endpoint REST latihan berhasil diakses menggunakan HTTP method GET.
 - [x] Response JSON berhasil dibaca dan memiliki field `userId`, `id`, `title`, dan `body`.
+
+---
+
+## Database Supabase
+
+Tabel `courses` berhasil dibuat pada Supabase dengan kolom `id`, `code`, `title`, `credits`, `status`, dan `created_at`. Empat data awal telah ditambahkan dan RLS policy untuk operasi `SELECT` telah dikonfigurasikan untuk kebutuhan praktikum.
