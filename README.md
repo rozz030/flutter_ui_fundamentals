@@ -1,6 +1,6 @@
 # Course Explorer v2
 
-Aplikasi Flutter hasil praktikum Pertemuan 6 — State Management & Mobile Application Architecture.
+Aplikasi Flutter hasil praktikum Pertemuan 7 — State Management & Mobile Application Architecture.
 
 **Nama:** Komang Rossi Adi Utama  
 **NIM:** 2415051106  
@@ -8,99 +8,226 @@ Aplikasi Flutter hasil praktikum Pertemuan 6 — State Management & Mobile Appli
 
 ---
 
-## Arsitektur Aplikasi
+## Deskripsi Aplikasi
 
-Arah dependency (dari luar ke dalam):
+**Course Explorer v2** merupakan aplikasi Flutter untuk mengelola data mata kuliah. Aplikasi dikembangkan secara bertahap dengan menerapkan konsep **State Management**, **layered architecture**, dan integrasi **Supabase sebagai backend database**.
 
-**Aturan penting:** Layer atas boleh memanggil layer di bawahnya, tapi **tidak sebaliknya**. UI tidak boleh tahu apakah data berasal dari JSON, REST API, atau database.
+Aplikasi menyediakan fitur untuk:
+
+- Menampilkan daftar mata kuliah.
+- Menambahkan mata kuliah.
+- Mengubah data mata kuliah.
+- Menghapus data mata kuliah.
+- Menampilkan status mata kuliah.
+- Mengelola data favorit.
+- Menangani kondisi error dan kegagalan request.
+- Menerapkan RLS sebagai lapisan keamanan pada database Supabase.
 
 ---
 
-## Endpoint REST yang Digunakan
+## Arsitektur Aplikasi
 
-Endpoint yang digunakan pada Tahap 1:
+Aplikasi menggunakan pendekatan **layered architecture** dengan alur:
 
-- **URL:** https://jsonplaceholder.typicode.com/posts
-- **HTTP Method:** GET
-- **Status Code:** 200 OK
-- **Resource:** posts
+**UI → Provider → Repository → Service → Supabase**
 
-### Field JSON
+Setiap layer memiliki tanggung jawab yang berbeda.
 
-Response JSON dari endpoint memiliki beberapa field, di antaranya:
+**Aturan penting:** layer atas boleh memanggil layer di bawahnya, tetapi tidak sebaliknya. UI tidak menangani detail komunikasi langsung dengan database.
 
-- `userId`
-- `id`
-- `title`
-- `body`
+### Alur Data
 
-Endpoint tersebut digunakan sebagai API latihan/dummy untuk membaca data JSON pada tahap awal pengembangan aplikasi.
+1. **UI / Screen** menampilkan data dan menerima interaksi pengguna.
+2. **CourseProvider** mengelola state aplikasi menggunakan `ChangeNotifier`.
+3. **CourseRepository** menjadi abstraksi antara Provider dan sumber data.
+4. **CourseSupabaseService** menangani komunikasi dengan Supabase.
+5. **Supabase Database** menyimpan data `courses`.
 
 ---
 
 ## Struktur Folder & Tanggung Jawab
 
-| Folder | Tanggung Jawab |
+| Folder/File | Tanggung Jawab |
 |---|---|
-| `lib/models/` | Struktur data (class `Course`). Parsing JSON (`Course.fromJson`). |
-| `lib/services/` | Ambil data mentah dari sumber (JSON asset, API, DB). Titik masuk `rootBundle` dan `jsonDecode`. |
-| `lib/repositories/` | Abstraksi sumber data untuk Provider. Menyembunyikan detail Service. |
-| `lib/providers/` | State + logic UI (`ChangeNotifier`). Panggil `notifyListeners()`. **Tidak boleh** berisi widget atau `BuildContext`. |
-| `lib/screens/` | Halaman aplikasi (`DashboardPage`, `CoursesPage`, `FavoritesPage`, `CourseDetailPage`, `MainShell`). |
-| `lib/widgets/` | Komponen UI yang bisa dipakai ulang (`CourseCard`, `SummaryCard`, `DebugPanelCard`, dll). |
-| `lib/constants.dart` | Konstanta identitas (Nama, NIM). |
-| `lib/main.dart` | Root app. Setup `MultiProvider`, `MaterialApp`, dan `home: MainShell()`. |
+| `lib/models/` | Struktur data dan proses parsing model `Course`. |
+| `lib/services/` | Menangani komunikasi dengan sumber data, termasuk Supabase. |
+| `lib/repositories/` | Abstraksi sumber data untuk Provider. |
+| `lib/providers/` | Mengelola state dan logic aplikasi menggunakan `ChangeNotifier`. |
+| `lib/screens/` | Berisi halaman aplikasi dan tampilan utama. |
+| `lib/widgets/` | Komponen UI yang dapat digunakan kembali. |
+| `lib/config/` | Menyimpan konfigurasi koneksi Supabase yang digunakan aplikasi. |
+| `lib/main.dart` | Root aplikasi, inisialisasi Supabase, `MultiProvider`, dan `MaterialApp`. |
 
 ---
 
-## Alur Data Courses
+## Backend dan Database
 
-1. `DashboardPage` memanggil `CourseProvider.loadCourses()` via `context.read`.
-2. `CourseProvider` memanggil `CourseRepository.getCourses()`.
-3. `CourseRepository` memanggil `CourseService.loadCourses()`.
-4. `CourseService` membaca JSON asset dan mem-parse tiap item menjadi `Course`.
-5. Hasil dikembalikan ke Provider, yang memanggil `notifyListeners()`.
-6. UI yang `Consumer<CourseProvider>` rebuild dengan data terbaru.
+Aplikasi menggunakan **Supabase** sebagai backend database.
 
----
+Database memiliki tabel:
 
-## Alur Data Favorites
+`courses`
 
-1. `FavoriteNotifier` menyimpan `Set<String>` kode course favorit — sebagai **single source of truth**.
-2. Dashboard, Courses, Favorites, dan Detail membaca dari notifier yang sama.
-3. Toggle di mana pun langsung konsisten di seluruh screen.
+dengan kolom:
 
----
+- `id`
+- `code`
+- `title`
+- `credits`
+- `status`
+- `created_at`
 
-## Audit Hasil
+Data course disimpan secara persisten pada database Supabase.
 
-- [x] UI tidak memanggil `rootBundle` / `jsonDecode` langsung.
-- [x] `CourseService` hanya berisi logika data, tanpa widget/UI.
-- [x] `CourseProvider` dan `FavoriteNotifier` tidak menyimpan `BuildContext`.
-- [x] Arah dependency: Screen → Provider → Repository → Service → JSON.
-- [x] Folder dipisah berdasarkan tanggung jawab.
-- [x] Nama dan NIM tampil di UI dan di setiap file.
-- [x] Endpoint REST latihan berhasil diakses menggunakan HTTP method GET.
-- [x] Response JSON berhasil dibaca dan memiliki field `userId`, `id`, `title`, dan `body`.
+RLS (**Row Level Security**) digunakan sebagai lapisan keamanan backend untuk mengatur izin operasi terhadap tabel.
 
 ---
 
-## Database Supabase
+## Fitur CRUD
 
-Tabel `courses` berhasil dibuat pada Supabase dengan kolom `id`, `code`, `title`, `credits`, `status`, dan `created_at`. Empat data awal telah ditambahkan dan RLS policy untuk operasi `SELECT` telah dikonfigurasikan untuk kebutuhan praktikum.
+### SELECT
 
+Aplikasi mengambil data course dari tabel `courses` pada Supabase dan menampilkannya pada halaman Courses.
 
-## Penyelesaian Course Data Manager CRUD Terintegrasi
+### INSERT
 
-Pada tahap ini, fitur Course Data Manager telah selesai dan terintegrasi dengan database Supabase.
+Pengguna dapat menambahkan course baru melalui form **Create Course**.
 
-Fitur CRUD yang telah berhasil:
-- SELECT: membaca data course dari database.
-- INSERT: menambahkan data course ke database.
-- UPDATE: mengubah data course berdasarkan ID.
-- DELETE: menghapus data course berdasarkan ID.
+Data dikirim melalui alur:
 
-Alur arsitektur aplikasi:
-Service → Repository → Provider → UI
+**CreateCoursePage → CourseProvider → CourseRepository → CourseSupabaseService → Supabase**
 
-Perubahan data dapat diverifikasi melalui aplikasi Flutter dan tabel `courses` pada Supabase.
+### UPDATE
+
+Pengguna dapat mengubah data course melalui halaman **Edit Course**.
+
+Update dilakukan berdasarkan **ID course** yang tersimpan pada database.
+
+### DELETE
+
+Pengguna dapat menghapus course melalui tombol **Delete**.
+
+Sebelum penghapusan dilakukan, aplikasi menampilkan **dialog konfirmasi**.
+
+Penghapusan dilakukan berdasarkan ID dan setelah berhasil data pada aplikasi diperbarui.
+
+---
+
+## State Management
+
+State aplikasi dikelola menggunakan **Provider**.
+
+`CourseProvider` bertanggung jawab terhadap:
+
+- daftar course;
+- status loading;
+- status penyimpanan;
+- error handling;
+- proses mengambil data;
+- proses menambahkan data;
+- proses mengubah data;
+- proses menghapus data.
+
+`FavoriteNotifier` digunakan untuk mengelola data course favorit.
+
+---
+
+## Error Handling
+
+Aplikasi memiliki penanganan error untuk mencegah aplikasi mengalami crash ketika terjadi kegagalan request.
+
+Pengujian dilakukan terhadap beberapa kondisi:
+
+- HTTP 404 / endpoint tidak valid.
+- Tidak ada koneksi internet.
+- Kesalahan mapping JSON.
+- RLS / permission Supabase.
+- Data tidak valid atau melanggar constraint.
+
+Pada kondisi error, aplikasi menampilkan informasi kesalahan kepada pengguna dan menyediakan mekanisme **retry** pada halaman yang relevan.
+
+---
+
+## Security Checklist
+
+- [x] Tidak menggunakan `service_role` key pada source code aplikasi.
+- [x] Tidak menyimpan password atau token pribadi pada repository.
+- [x] File `.env` yang berisi secret tidak di-commit.
+- [x] Data sensitif tidak ditampilkan pada screenshot.
+- [x] RLS/policy dipahami sebagai lapisan keamanan backend.
+- [x] Validasi UI tidak dianggap sebagai pengganti validasi dan authorization backend.
+
+---
+
+## Cara Menjalankan Aplikasi
+
+Pastikan Flutter dan environment development sudah terpasang.
+
+Clone repository:
+
+```bash
+git clone https://github.com/rozz030/flutter_ui_fundamentals.git
+```
+
+Masuk ke folder project:
+
+```bash
+cd flutter_ui_fundamentals
+```
+
+Install dependencies:
+
+```bash
+flutter pub get
+```
+
+Jalankan aplikasi:
+
+```bash
+flutter run
+```
+
+Pastikan konfigurasi Supabase pada project sudah tersedia sebelum menjalankan aplikasi.
+
+---
+
+## Git Checkpoint
+
+Pengembangan aplikasi dilakukan secara bertahap dan setiap tahap penting dicatat menggunakan Git.
+
+Checkpoint mencakup proses:
+
+- konfigurasi Supabase;
+- pembacaan data;
+- INSERT;
+- UPDATE;
+- DELETE;
+- error handling;
+- security hardening;
+- finalisasi repository.
+
+Repository telah di-push ke GitHub dan digunakan sebagai tempat pengumpulan source code praktikum.
+
+---
+
+## Repository
+
+**GitHub Repository:**
+
+https://github.com/rozz030/flutter_ui_fundamentals.git
+
+---
+
+## Kesimpulan
+
+Course Explorer v2 telah dikembangkan menjadi aplikasi **Course Data Manager CRUD** yang terintegrasi dengan Supabase.
+
+Aplikasi menerapkan pemisahan tanggung jawab melalui arsitektur:
+
+**Service → Repository → Provider → UI**
+
+serta mendukung operasi:
+
+**SELECT → INSERT → UPDATE → DELETE**
+
+Data dapat diverifikasi melalui aplikasi Flutter maupun tabel `courses` pada Supabase.
