@@ -1,5 +1,5 @@
 // =============================================================
-// Pertemuan 7 - Tahap 15
+// Pertemuan 7 - Tahap 17
 // Service: Course Supabase
 // Nama : Komang Rossi Adi Utama
 // NIM  : 2415051106
@@ -18,11 +18,15 @@ class CourseSupabaseService implements CourseDataSource {
   // =============================================================
   @override
   Future<List<Course>> getCourses() async {
-    final data = await supabase.from('courses').select().order('id');
+    try {
+      final data = await supabase.from('courses').select().order('id');
 
-    return (data as List)
-        .map((e) => Course.fromJson(e as Map<String, dynamic>))
-        .toList();
+      return (data as List)
+          .map((e) => Course.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      throw Exception('Gagal mengambil data course: $e');
+    }
   }
 
   // =============================================================
@@ -30,13 +34,17 @@ class CourseSupabaseService implements CourseDataSource {
   // =============================================================
   @override
   Future<Course> createCourse(Course course) async {
-    final row = await supabase
-        .from('courses')
-        .insert(course.toJson())
-        .select()
-        .single();
+    try {
+      final row = await supabase
+          .from('courses')
+          .insert(course.toJson())
+          .select()
+          .single();
 
-    return Course.fromJson(row);
+      return Course.fromJson(row);
+    } catch (e) {
+      throw Exception('Gagal menambahkan course: $e');
+    }
   }
 
   // =============================================================
@@ -44,7 +52,22 @@ class CourseSupabaseService implements CourseDataSource {
   // =============================================================
   @override
   Future<void> updateCourse(int id, Course course) async {
-    await supabase.from('courses').update(course.toJson()).eq('id', id);
+    try {
+      final updatedRows = await supabase
+          .from('courses')
+          .update(course.toJson())
+          .eq('id', id)
+          .select();
+
+      if ((updatedRows as List).isEmpty) {
+        throw Exception(
+          'UPDATE ditolak atau data dengan ID $id tidak ditemukan. '
+          'Periksa RLS policy Supabase.',
+        );
+      }
+    } catch (e) {
+      throw Exception('Gagal memperbarui course: $e');
+    }
   }
 
   // =============================================================
@@ -52,6 +75,21 @@ class CourseSupabaseService implements CourseDataSource {
   // =============================================================
   @override
   Future<void> deleteCourse(int id) async {
-    await supabase.from('courses').delete().eq('id', id);
+    try {
+      final deletedRows = await supabase
+          .from('courses')
+          .delete()
+          .eq('id', id)
+          .select();
+
+      if ((deletedRows as List).isEmpty) {
+        throw Exception(
+          'DELETE ditolak atau data dengan ID $id tidak ditemukan. '
+          'Periksa RLS policy Supabase.',
+        );
+      }
+    } catch (e) {
+      throw Exception('Gagal menghapus course: $e');
+    }
   }
 }
