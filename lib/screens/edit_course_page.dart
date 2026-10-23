@@ -33,6 +33,7 @@ class _EditCoursePageState extends State<EditCoursePage> {
   late final TextEditingController _creditsController;
 
   late String _selectedStatus;
+
   bool _isSubmitting = false;
 
   @override
@@ -47,7 +48,18 @@ class _EditCoursePageState extends State<EditCoursePage> {
       text: widget.course.credits.toString(),
     );
 
-    _selectedStatus = widget.course.status;
+    // =============================================================
+    // NORMALISASI STATUS
+    // =============================================================
+    final String status = widget.course.status.toLowerCase().trim();
+
+    if (status == 'active' || status == 'aktif') {
+      _selectedStatus = 'active';
+    } else if (status == 'done' || status == 'selesai') {
+      _selectedStatus = 'done';
+    } else {
+      _selectedStatus = 'planned';
+    }
   }
 
   @override
@@ -55,9 +67,13 @@ class _EditCoursePageState extends State<EditCoursePage> {
     _codeController.dispose();
     _titleController.dispose();
     _creditsController.dispose();
+
     super.dispose();
   }
 
+  // =============================================================
+  // UPDATE COURSE
+  // =============================================================
   Future<void> _updateCourse() async {
     if (_isSubmitting) {
       return;
@@ -72,15 +88,28 @@ class _EditCoursePageState extends State<EditCoursePage> {
     });
 
     final Course updatedCourse = Course(
-      // Code tidak dapat diubah karena digunakan sebagai
-      // kunci favorites.
+      // Kode course tidak diubah.
       code: widget.course.code,
+
+      // Data yang dapat diubah.
       title: _titleController.text.trim(),
+
       credits: int.parse(_creditsController.text.trim()),
+
       status: _selectedStatus,
     );
 
     try {
+      // =========================================================
+      // DEBUG UPDATE
+      // =========================================================
+      debugPrint('UPDATE COURSE ID: ${widget.courseId}');
+
+      debugPrint('UPDATE COURSE DATA: ${updatedCourse.toJson()}');
+
+      // =========================================================
+      // UPDATE KE SUPABASE
+      // =========================================================
       await context.read<CourseProvider>().updateCourse(
         widget.courseId,
         updatedCourse,
@@ -94,7 +123,8 @@ class _EditCoursePageState extends State<EditCoursePage> {
         const SnackBar(content: Text('Course berhasil diperbarui.')),
       );
 
-      Navigator.pop(context);
+      // Kembali ke halaman Courses.
+      Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) {
         return;
@@ -124,8 +154,24 @@ class _EditCoursePageState extends State<EditCoursePage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // =================================================
-              // CODE
-              // Dibuat read-only sesuai ketentuan worksheet.
+              // JUDUL HALAMAN
+              // =================================================
+              const Text(
+                'Edit Mata Kuliah',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+
+              const SizedBox(height: 8),
+
+              const Text(
+                'Ubah data mata kuliah yang dipilih.',
+                style: TextStyle(color: Colors.grey),
+              ),
+
+              const SizedBox(height: 24),
+
+              // =================================================
+              // KODE COURSE
               // =================================================
               TextFormField(
                 controller: _codeController,
@@ -147,6 +193,7 @@ class _EditCoursePageState extends State<EditCoursePage> {
                 textInputAction: TextInputAction.next,
                 decoration: const InputDecoration(
                   labelText: 'Judul Course',
+                  hintText: 'Contoh: Pemrograman Mobile',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.menu_book),
                 ),
@@ -162,15 +209,16 @@ class _EditCoursePageState extends State<EditCoursePage> {
               const SizedBox(height: 16),
 
               // =================================================
-              // CREDITS
+              // CREDITS / SKS
               // =================================================
               TextFormField(
                 controller: _creditsController,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
                   labelText: 'SKS',
+                  hintText: 'Contoh: 3',
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.numbers),
+                  prefixIcon: Icon(Icons.school),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
@@ -211,21 +259,23 @@ class _EditCoursePageState extends State<EditCoursePage> {
                     child: Text('Direncanakan'),
                   ),
                 ],
-                onChanged: (value) {
-                  if (value == null) {
-                    return;
-                  }
+                onChanged: _isSubmitting
+                    ? null
+                    : (value) {
+                        if (value == null) {
+                          return;
+                        }
 
-                  setState(() {
-                    _selectedStatus = value;
-                  });
-                },
+                        setState(() {
+                          _selectedStatus = value;
+                        });
+                      },
               ),
 
               const SizedBox(height: 24),
 
               // =================================================
-              // UPDATE BUTTON
+              // TOMBOL SIMPAN PERUBAHAN
               // =================================================
               FilledButton.icon(
                 onPressed: _isSubmitting ? null : _updateCourse,

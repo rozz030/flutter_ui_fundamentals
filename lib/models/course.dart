@@ -1,17 +1,19 @@
 // =============================================================
-// Pertemuan 6 - Tahap 8
+// Pertemuan 7 - Tahap 8
 // Model Course
 // Nama : Komang Rossi Adi Utama
 // NIM  : 2415051106
 // =============================================================
 
 class Course {
+  final int? id;
   final String code;
   final String title;
   final int credits;
   final String status;
 
   Course({
+    this.id,
     required this.code,
     required this.title,
     required this.credits,
@@ -19,9 +21,10 @@ class Course {
   });
 
   factory Course.fromJson(Map<String, dynamic> json) {
-    // Mendukung data Course maupun data dari JSONPlaceholder /posts.
+    // Data Course dari Supabase.
     if (json.containsKey('code')) {
       return Course(
+        id: json['id'] as int?,
         code: json['code'] as String,
         title: json['title'] as String,
         credits: json['credits'] as int,
@@ -33,6 +36,7 @@ class Course {
     final int id = json['id'] as int;
 
     return Course(
+      id: id,
       code: 'COURSE-$id',
       title: json['title'] as String,
       credits: 3,

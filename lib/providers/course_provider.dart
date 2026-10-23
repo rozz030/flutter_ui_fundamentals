@@ -58,7 +58,6 @@ class CourseProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Kirim data course ke Supabase melalui repository.
       await repository.createCourse(course);
 
       // Refresh list dari database agar data yang tampil
@@ -87,17 +86,12 @@ class CourseProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      // Kirim data course ke Supabase melalui repository.
       await repository.updateCourse(id, course);
 
-      // Update data lokal agar perubahan langsung terlihat
-      // pada daftar course.
-      final int index = courses.indexWhere((item) => item.code == course.code);
-
-      if (index != -1) {
-        courses[index] = course;
-      }
-
-      notifyListeners();
+      // Refresh list dari database agar data yang tampil
+      // benar-benar sesuai dengan data di Supabase.
+      await loadCourses();
     } catch (e) {
       error = e.toString();
       notifyListeners();

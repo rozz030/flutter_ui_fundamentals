@@ -85,17 +85,19 @@ class CoursesPage extends StatelessWidget {
                       Align(
                         alignment: Alignment.centerRight,
                         child: OutlinedButton.icon(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => EditCoursePage(
-                                  course: course,
-                                  courseId: index + 1,
-                                ),
-                              ),
-                            );
-                          },
+                          onPressed: course.id == null
+                              ? null
+                              : () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => EditCoursePage(
+                                        course: course,
+                                        courseId: course.id!,
+                                      ),
+                                    ),
+                                  );
+                                },
                           icon: const Icon(Icons.edit),
                           label: const Text('Edit'),
                         ),
@@ -107,78 +109,88 @@ class CoursesPage extends StatelessWidget {
                       Align(
                         alignment: Alignment.centerRight,
                         child: OutlinedButton.icon(
-                          onPressed: () async {
-                            // Ambil semua dependency yang menggunakan
-                            // BuildContext SEBELUM async gap.
-                            final courseProvider = context
-                                .read<CourseProvider>();
+                          onPressed: course.id == null
+                              ? null
+                              : () async {
+                                  final courseProvider = context
+                                      .read<CourseProvider>();
 
-                            final messenger = ScaffoldMessenger.of(context);
+                                  final messenger = ScaffoldMessenger.of(
+                                    context,
+                                  );
 
-                            final bool wasFavorite = favNotifier.isFavorite(
-                              course.code,
-                            );
+                                  final bool wasFavorite = favNotifier
+                                      .isFavorite(course.code);
 
-                            final bool? confirmed = await showDialog<bool>(
-                              context: context,
-                              builder: (dialogContext) {
-                                return AlertDialog(
-                                  title: const Text('Hapus Course?'),
-                                  content: Text(
-                                    'Apakah kamu yakin ingin '
-                                    'menghapus "${course.title}"?',
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () {
-                                        Navigator.pop(dialogContext, false);
-                                      },
-                                      child: const Text('Batal'),
-                                    ),
-                                    FilledButton(
-                                      onPressed: () {
-                                        Navigator.pop(dialogContext, true);
-                                      },
-                                      child: const Text('Hapus'),
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
+                                  final bool? confirmed =
+                                      await showDialog<bool>(
+                                        context: context,
+                                        builder: (dialogContext) {
+                                          return AlertDialog(
+                                            title: const Text('Hapus Course?'),
+                                            content: Text(
+                                              'Apakah kamu yakin ingin '
+                                              'menghapus "${course.title}"?',
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.pop(
+                                                    dialogContext,
+                                                    false,
+                                                  );
+                                                },
+                                                child: const Text('Batal'),
+                                              ),
+                                              FilledButton(
+                                                onPressed: () {
+                                                  Navigator.pop(
+                                                    dialogContext,
+                                                    true,
+                                                  );
+                                                },
+                                                child: const Text('Hapus'),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      );
 
-                            if (confirmed != true) {
-                              return;
-                            }
+                                  if (confirmed != true) {
+                                    return;
+                                  }
 
-                            try {
-                              await courseProvider.deleteCourse(
-                                index + 1,
-                                course.code,
-                              );
+                                  try {
+                                    await courseProvider.deleteCourse(
+                                      course.id!,
+                                      course.code,
+                                    );
 
-                              // Jika course dihapus, hapus juga
-                              // dari daftar Favorites.
-                              if (wasFavorite) {
-                                favNotifier.toggle(course.code);
-                              }
+                                    if (wasFavorite) {
+                                      favNotifier.toggle(course.code);
+                                    }
 
-                              messenger
-                                ..hideCurrentSnackBar()
-                                ..showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Course berhasil dihapus.'),
-                                  ),
-                                );
-                            } catch (e) {
-                              messenger
-                                ..hideCurrentSnackBar()
-                                ..showSnackBar(
-                                  SnackBar(
-                                    content: Text('Gagal menghapus course: $e'),
-                                  ),
-                                );
-                            }
-                          },
+                                    messenger
+                                      ..hideCurrentSnackBar()
+                                      ..showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Course berhasil dihapus.',
+                                          ),
+                                        ),
+                                      );
+                                  } catch (e) {
+                                    messenger
+                                      ..hideCurrentSnackBar()
+                                      ..showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Gagal menghapus course: $e',
+                                          ),
+                                        ),
+                                      );
+                                  }
+                                },
                           icon: const Icon(Icons.delete),
                           label: const Text('Delete'),
                         ),
