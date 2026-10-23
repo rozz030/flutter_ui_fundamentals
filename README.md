@@ -88,3 +88,19 @@ Endpoint tersebut digunakan sebagai API latihan/dummy untuk membaca data JSON pa
 ## Database Supabase
 
 Tabel `courses` berhasil dibuat pada Supabase dengan kolom `id`, `code`, `title`, `credits`, `status`, dan `created_at`. Empat data awal telah ditambahkan dan RLS policy untuk operasi `SELECT` telah dikonfigurasikan untuk kebutuhan praktikum.
+
+
+## Penyelesaian Course Data Manager CRUD Terintegrasi
+
+Pada tahap ini, fitur Course Data Manager telah selesai dan terintegrasi dengan database Supabase.
+
+Fitur CRUD yang telah berhasil:
+- SELECT: membaca data course dari database.
+- INSERT: menambahkan data course ke database.
+- UPDATE: mengubah data course berdasarkan ID.
+- DELETE: menghapus data course berdasarkan ID.
+
+Alur arsitektur aplikasi:
+Service → Repository → Provider → UI
+
+Perubahan data dapat diverifikasi melalui aplikasi Flutter dan tabel `courses` pada Supabase.
