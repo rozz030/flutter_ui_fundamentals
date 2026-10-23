@@ -1,5 +1,5 @@
 // =============================================================
-// Pertemuan 7 - Tahap 8
+// Pertemuan 6 - Tahap 8
 // Model Course
 // Nama : Komang Rossi Adi Utama
 // NIM  : 2415051106
@@ -21,7 +21,7 @@ class Course {
   });
 
   factory Course.fromJson(Map<String, dynamic> json) {
-    // Data Course dari Supabase.
+    // Data dari Supabase
     if (json.containsKey('code')) {
       return Course(
         id: json['id'] as int?,

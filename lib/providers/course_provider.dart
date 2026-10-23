@@ -115,13 +115,13 @@ class CourseProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      // Hapus course berdasarkan ID melalui repository.
       await repository.deleteCourse(id);
 
-      // Hapus course dari list lokal agar perubahan
-      // langsung terlihat pada halaman Courses.
-      courses.removeWhere((course) => course.code == courseCode);
-
-      notifyListeners();
+      // Refresh list dari database setelah DELETE berhasil.
+      // Dengan cara ini, data yang tampil di aplikasi
+      // benar-benar mengikuti data terbaru di Supabase.
+      await loadCourses();
     } catch (e) {
       error = e.toString();
       notifyListeners();
