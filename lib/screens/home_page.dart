@@ -4,6 +4,7 @@ import '../services/auth_service.dart';
 import '../services/profile_service.dart';
 import '../widgets/role_guard.dart';
 import 'login_page.dart';
+import 'kos_list_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -69,7 +70,6 @@ class _HomePageState extends State<HomePage> {
               ),
             ],
           ),
-
           body: ListView(
             padding: const EdgeInsets.all(20),
             children: [
@@ -108,12 +108,21 @@ class _HomePageState extends State<HomePage> {
 
               const Divider(height: 32),
 
-              const ListTile(
-                leading: Icon(Icons.list),
-                title: Text('Daftar Kos'),
-                subtitle: Text('Lihat daftar kos yang tersedia'),
+              // Menu Daftar Kos untuk semua role
+              ListTile(
+                leading: const Icon(Icons.list),
+                title: const Text('Daftar Kos'),
+                subtitle: const Text('Lihat daftar kos yang tersedia'),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const KosListPage()),
+                  );
+                },
               ),
 
+              // Menu My Kos khusus owner dan admin
               RoleGuard(
                 role: profile.role,
                 allowed: const ['owner', 'admin'],
@@ -124,6 +133,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
 
+              // Menu Admin khusus admin
               RoleGuard(
                 role: profile.role,
                 allowed: const ['admin'],
