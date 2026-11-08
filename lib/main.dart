@@ -1,6 +1,6 @@
 // =============================================================
-// Pertemuan 7 - Tahap 12
-// Main: Supabase Client + Service → Repository → Provider
+// Pertemuan 7 - Praktik 1
+// Main: Supabase Authentication + Provider
 // Nama : Komang Rossi Adi Utama
 // NIM  : 2415051106
 // =============================================================
@@ -13,7 +13,8 @@ import 'config/supabase_config.dart';
 import 'providers/course_provider.dart';
 import 'providers/favorite_notifier.dart';
 import 'repositories/course_repository.dart';
-import 'screens/main_shell.dart';
+import 'screens/home_page.dart';
+import 'screens/login_page.dart';
 import 'services/course_supabase_service.dart';
 
 // =============================================================
@@ -33,22 +34,16 @@ const String apiBaseUrl = 'https://jsonplaceholder.typicode.com';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // =============================================================
-  // INISIALISASI SUPABASE
-  // =============================================================
+  // Inisialisasi Supabase
   await Supabase.initialize(
     url: SupabaseConfig.url,
     publishableKey: SupabaseConfig.anonKey,
   );
 
-  // =============================================================
-  // SERVICE → REPOSITORY
-  // =============================================================
+  // Service → Repository
   final repository = CourseRepository(CourseSupabaseService());
 
-  // =============================================================
-  // REPOSITORY → PROVIDER
-  // =============================================================
+  // Repository → Provider
   runApp(
     MultiProvider(
       providers: [
@@ -79,7 +74,33 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: const MainShell(),
+      home: const AuthGate(),
+    );
+  }
+}
+
+// =============================================================
+// AUTHENTICATION GATE
+// Memeriksa status login pengguna
+// =============================================================
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<AuthState>(
+      stream: Supabase.instance.client.auth.onAuthStateChange,
+      builder: (context, snapshot) {
+        final session =
+            snapshot.data?.session ??
+            Supabase.instance.client.auth.currentSession;
+
+        if (session != null) {
+          return const HomePage();
+        }
+
+        return const LoginPage();
+      },
     );
   }
 }
