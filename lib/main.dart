@@ -16,7 +16,6 @@ import 'repositories/course_repository.dart';
 import 'screens/home_page.dart';
 import 'screens/login_page.dart';
 import 'services/course_supabase_service.dart';
-import 'services/auth_service.dart';
 
 // =============================================================
 // IDENTITAS MAHASISWA

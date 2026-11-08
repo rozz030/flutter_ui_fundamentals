@@ -16,12 +16,18 @@ class AuthService {
   // Memeriksa apakah pengguna sudah login
   bool get isLoggedIn => currentSession != null;
 
-  // Registrasi pengguna
+  // Registrasi pengguna dengan nama dan role
   Future<AuthResponse> register({
     required String email,
     required String password,
+    String name = '',
+    String role = 'seeker',
   }) {
-    return _client.auth.signUp(email: email, password: password);
+    return _client.auth.signUp(
+      email: email,
+      password: password,
+      data: {'name': name, 'role': role},
+    );
   }
 
   // Login pengguna
