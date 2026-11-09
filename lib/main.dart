@@ -1,14 +1,10 @@
-// =============================================================
-// Pertemuan 7 - Praktik 1
-// Main: Supabase Authentication + Provider
-// Nama : Komang Rossi Adi Utama
-// NIM  : 2415051106
-// =============================================================
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
+import 'firebase_options.dart';
 import 'config/supabase_config.dart';
 import 'providers/course_provider.dart';
 import 'providers/favorite_notifier.dart';
@@ -16,6 +12,7 @@ import 'repositories/course_repository.dart';
 import 'screens/home_page.dart';
 import 'screens/login_page.dart';
 import 'services/course_supabase_service.dart';
+import 'services/notification_service.dart';
 
 // =============================================================
 // IDENTITAS MAHASISWA
@@ -29,10 +26,27 @@ const String studentId = '2415051106';
 const String apiBaseUrl = 'https://jsonplaceholder.typicode.com';
 
 // =============================================================
+// GLOBAL MESSENGER KEY
+// Digunakan untuk menampilkan notifikasi foreground
+// =============================================================
+final GlobalKey<ScaffoldMessengerState> messengerKey =
+    GlobalKey<ScaffoldMessengerState>();
+
+// =============================================================
 // MAIN
 // =============================================================
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Inisialisasi Firebase
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Pemeriksaan inisialisasi Firebase
+  debugPrint('Firebase initialized: ${Firebase.apps.isNotEmpty}');
+  debugPrint('Firebase apps: ${Firebase.apps.map((app) => app.name).toList()}');
+
+  // Registrasi background notification handler
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
   // Inisialisasi Supabase
   await Supabase.initialize(
@@ -68,6 +82,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      scaffoldMessengerKey: messengerKey,
       debugShowCheckedModeBanner: false,
       title: 'Course Data Manager',
       theme: ThemeData(

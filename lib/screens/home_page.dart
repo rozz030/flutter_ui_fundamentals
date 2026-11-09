@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
 import '../services/profile_service.dart';
+import '../services/notification_service.dart';
 import '../widgets/role_guard.dart';
 import 'login_page.dart';
 import 'kos_list_page.dart';
@@ -19,9 +20,16 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+
     _profileFuture = ProfileService().getMyProfile();
+
+    // Inisialisasi Notification Service
+    NotificationService.instance.init();
   }
 
+  // =============================================================
+  // LOGOUT
+  // =============================================================
   Future<void> _logout() async {
     try {
       await AuthService.instance.logout();
@@ -40,6 +48,9 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  // =============================================================
+  // BUILD
+  // =============================================================
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<UserProfile?>(
@@ -70,6 +81,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ],
           ),
+
           body: ListView(
             padding: const EdgeInsets.all(20),
             children: [
@@ -88,18 +100,21 @@ class _HomePageState extends State<HomePage> {
 
               const SizedBox(height: 24),
 
+              // Informasi nama pengguna
               ListTile(
                 leading: const Icon(Icons.person),
                 title: const Text('Nama'),
                 subtitle: Text(profile.name.isEmpty ? '-' : profile.name),
               ),
 
+              // Informasi email
               ListTile(
                 leading: const Icon(Icons.email),
                 title: const Text('Email'),
                 subtitle: Text(profile.email),
               ),
 
+              // Informasi role
               ListTile(
                 leading: const Icon(Icons.badge),
                 title: const Text('Role'),
@@ -146,6 +161,7 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
 
+          // Tombol tambah kos khusus owner dan admin
           floatingActionButton: RoleGuard(
             role: profile.role,
             allowed: const ['owner', 'admin'],
