@@ -2,12 +2,12 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 
+import '../app_keys.dart';
 import '../firebase_options.dart';
-import '../main.dart';
+import '../screens/kos_detail_page.dart';
 
 // =============================================================
-// BACKGROUND NOTIFICATION HANDLER
-// Harus berupa fungsi top-level (di luar class)
+// BACKGROUND MESSAGE HANDLER
 // =============================================================
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -28,10 +28,11 @@ class NotificationService {
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
 
   bool _isInitialized = false;
+  bool _isInteractionSetup = false;
 
-  // =============================================================
-  // MEMINTA IZIN NOTIFIKASI
-  // =============================================================
+  // ===========================================================
+  // REQUEST NOTIFICATION PERMISSION
+  // ===========================================================
   Future<AuthorizationStatus> requestPermission() async {
     final settings = await _messaging.requestPermission(
       alert: true,
@@ -47,9 +48,9 @@ class NotificationService {
     return settings.authorizationStatus;
   }
 
-  // =============================================================
-  // MENDAPATKAN FCM TOKEN
-  // =============================================================
+  // ===========================================================
+  // GET FCM TOKEN
+  // ===========================================================
   Future<String?> getToken() async {
     try {
       debugPrint('Memulai mengambil FCM Token...');
@@ -60,7 +61,6 @@ class NotificationService {
         debugPrint('FCM Token belum tersedia.');
       } else {
         debugPrint('FCM Token berhasil diperoleh.');
-        debugPrint('FCM TOKEN SEBENARNYA: $token');
       }
 
       return token;
@@ -71,9 +71,9 @@ class NotificationService {
     }
   }
 
-  // =============================================================
-  // MENDENGARKAN PERUBAHAN FCM TOKEN
-  // =============================================================
+  // ===========================================================
+  // LISTEN TOKEN REFRESH
+  // ===========================================================
   void listenTokenRefresh(void Function(String token) onRefresh) {
     _messaging.onTokenRefresh.listen((newToken) {
       debugPrint('FCM Token diperbarui.');
@@ -81,9 +81,9 @@ class NotificationService {
     });
   }
 
-  // =============================================================
-  // INISIALISASI NOTIFIKASI
-  // =============================================================
+  // ===========================================================
+  // INITIALIZE NOTIFICATION
+  // ===========================================================
   Future<void> init() async {
     if (_isInitialized) {
       debugPrint('Notification Service sudah diinisialisasi.');
@@ -91,33 +91,27 @@ class NotificationService {
     }
 
     try {
-      // Meminta izin notifikasi
       await requestPermission();
 
-      // Mengambil FCM Token
       final token = await getToken();
 
       if (token != null) {
         debugPrint('FCM Token siap digunakan.');
       }
 
-      // Mendengarkan perubahan token
       listenTokenRefresh((newToken) {
         debugPrint('FCM Token baru diterima.');
       });
 
-      // Pengaturan notifikasi foreground
       await _messaging.setForegroundNotificationPresentationOptions(
         alert: true,
         badge: true,
         sound: true,
       );
 
-      // =========================================================
-      // FOREGROUND MESSAGE LISTENER
-      // =========================================================
       debugPrint('Listener onMessage berhasil didaftarkan.');
 
+      // Foreground notification listener
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
         debugPrint('[FOREGROUND] Notification received');
         debugPrint('title: ${message.notification?.title}');
@@ -125,6 +119,7 @@ class NotificationService {
         debugPrint('data : ${message.data}');
 
         final title = message.notification?.title ?? 'Notifikasi';
+
         final body = message.notification?.body ?? '';
 
         messengerKey.currentState?.showSnackBar(
@@ -142,5 +137,55 @@ class NotificationService {
       debugPrint('Notification initialization error: $error');
       debugPrintStack(stackTrace: stackTrace);
     }
+  }
+
+  // ===========================================================
+  // NOTIFICATION INTERACTION
+  // ===========================================================
+  Future<void> setupInteractedMessage() async {
+    if (_isInteractionSetup) {
+      debugPrint('Notification interaction sudah diinisialisasi.');
+      return;
+    }
+
+    try {
+      // Ketika aplikasi dibuka melalui notifikasi
+      // dari kondisi terminated
+      final initialMessage = await _messaging.getInitialMessage();
+
+      if (initialMessage != null) {
+        _handleTap(initialMessage);
+      }
+
+      // Ketika notifikasi ditekan saat aplikasi background
+      FirebaseMessaging.onMessageOpenedApp.listen(_handleTap);
+
+      _isInteractionSetup = true;
+
+      debugPrint('Notification interaction berhasil diinisialisasi.');
+    } catch (error, stackTrace) {
+      debugPrint('Notification interaction error: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+  }
+
+  // ===========================================================
+  // HANDLE NOTIFICATION TAP
+  // ===========================================================
+  void _handleTap(RemoteMessage message) {
+    debugPrint('[NOTIFICATION TAP] Notifikasi ditekan.');
+
+    debugPrint('Notification data: ${message.data}');
+
+    final kosId = message.data['kos_id'];
+
+    if (kosId == null || kosId.toString().isEmpty) {
+      debugPrint('kos_id tidak ditemukan pada notification data.');
+      return;
+    }
+
+    navigatorKey.currentState?.push(
+      MaterialPageRoute(builder: (_) => KosDetailPage(kosId: kosId.toString())),
+    );
   }
 }

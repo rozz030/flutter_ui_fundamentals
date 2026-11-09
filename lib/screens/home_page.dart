@@ -17,14 +17,27 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late Future<UserProfile?> _profileFuture;
 
+  // Mencegah inisialisasi notifikasi berulang
+  bool _notificationSetupStarted = false;
+
   @override
   void initState() {
     super.initState();
 
     _profileFuture = ProfileService().getMyProfile();
 
-    // Inisialisasi Notification Service
-    NotificationService.instance.init();
+    // Inisialisasi notifikasi setelah UI selesai dibangun
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted || _notificationSetupStarted) return;
+
+      _notificationSetupStarted = true;
+
+      await NotificationService.instance.init();
+
+      if (!mounted) return;
+
+      await NotificationService.instance.setupInteractedMessage();
+    });
   }
 
   // =============================================================
@@ -71,6 +84,9 @@ class _HomePageState extends State<HomePage> {
         }
 
         return Scaffold(
+          // =====================================================
+          // APP BAR
+          // =====================================================
           appBar: AppBar(
             title: Text('KosFinder (${profile.role})'),
             actions: [
@@ -82,6 +98,9 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
 
+          // =====================================================
+          // BODY
+          // =====================================================
           body: ListView(
             padding: const EdgeInsets.all(20),
             children: [
@@ -123,7 +142,10 @@ class _HomePageState extends State<HomePage> {
 
               const Divider(height: 32),
 
-              // Menu Daftar Kos untuk semua role
+              // =================================================
+              // MENU DAFTAR KOS
+              // Untuk semua role
+              // =================================================
               ListTile(
                 leading: const Icon(Icons.list),
                 title: const Text('Daftar Kos'),
@@ -137,7 +159,10 @@ class _HomePageState extends State<HomePage> {
                 },
               ),
 
-              // Menu My Kos khusus owner dan admin
+              // =================================================
+              // MENU MY KOS
+              // Khusus owner dan admin
+              // =================================================
               RoleGuard(
                 role: profile.role,
                 allowed: const ['owner', 'admin'],
@@ -148,7 +173,10 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
 
-              // Menu Admin khusus admin
+              // =================================================
+              // MENU ADMIN
+              // Khusus admin
+              // =================================================
               RoleGuard(
                 role: profile.role,
                 allowed: const ['admin'],
@@ -161,7 +189,10 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
 
-          // Tombol tambah kos khusus owner dan admin
+          // =====================================================
+          // FLOATING ACTION BUTTON
+          // Khusus owner dan admin
+          // =====================================================
           floatingActionButton: RoleGuard(
             role: profile.role,
             allowed: const ['owner', 'admin'],
